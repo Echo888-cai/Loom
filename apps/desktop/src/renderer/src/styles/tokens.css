@@ -1,0 +1,22 @@
+:root {
+  --canvas: #f7f7f5;
+  --surface: #ffffff;
+  --surface-subtle: #f1f1ee;
+  --text-primary: #171717;
+  --text-secondary: #4b5563;
+  --text-muted: #6b7280;
+  --line: #deded9;
+  --accent: #2864dc;
+  --accent-soft: #eff6ff;
+  --verified: #237a4b;
+  --approval: #a76200;
+  --failure: #bb3535;
+  --focus: #2864dc;
+  --font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, sans-serif;
+  --font-code: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --header-height: 58px;
+  --motion-fast: 160ms ease-out;
+  --motion-panel: 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}

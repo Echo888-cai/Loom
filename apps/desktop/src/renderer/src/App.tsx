@@ -1,7 +1,5 @@
-export function App() {
-  return (
-    <main>
-      <h1>Loom</h1>
-    </main>
-  )
-}
+import "./styles/global.css"
+import "./styles/motion.css"
+import { AppShell } from "./features/shell/AppShell.js"
+
+export function App() { return <AppShell /> }

@@ -495,7 +495,7 @@ git commit -m "feat(desktop): connect Loom task lifecycle"
 - Test: `apps/desktop/tests/renderer/app-shell.test.tsx`
 - Test: `apps/desktop/tests/renderer/accessibility.test.tsx`
 
-- [ ] **Step 1: Write failing shell behavior tests**
+- [x] **Step 1: Write failing shell behavior tests**
 
 Use Testing Library to assert:
 
@@ -506,7 +506,7 @@ Use Testing Library to assert:
 - icon-only controls have accessible names;
 - the page contains no `Connected`, `UTF-8`, `Ln `, `Col `, or editor-language status text.
 
-- [ ] **Step 2: Translate the approved design file into CSS tokens**
+- [x] **Step 2: Translate the approved design file into CSS tokens**
 
 Use local system fonts and these semantic tokens from the approved workbench override:
 
@@ -532,11 +532,11 @@ Use local system fonts and these semantic tokens from the approved workbench ove
 
 Keep borders one pixel, shadows quiet, and focus rings two pixels. Do not use gradients or remote assets.
 
-- [ ] **Step 3: Implement the original Loom mark and reusable controls**
+- [x] **Step 3: Implement the original Loom mark and reusable controls**
 
 Build `LoomLogo` as inline SVG with two interlocking rounded thread paths, `currentColor`, no text baked into the SVG, and legibility at 16px. Use Phosphor for general icons. `IconButton` requires `aria-label` and exposes 32px and 36px sizes.
 
-- [ ] **Step 4: Implement the three-panel AppShell**
+- [x] **Step 4: Implement the three-panel AppShell**
 
 Use CSS grid with persisted local panel widths:
 
@@ -546,17 +546,17 @@ Use CSS grid with persisted local panel widths:
 
 The header contains Loom/repository, current task title, and the command-palette control only. Panel dividers support mouse drag plus ArrowLeft/ArrowRight keyboard adjustment. Use a semantic `main` for code, `aside` for Agent Console, and navigation landmarks for Explorer.
 
-- [ ] **Step 5: Implement restrained motion and reduced-motion behavior**
+- [x] **Step 5: Implement restrained motion and reduced-motion behavior**
 
 Use 160ms ease-out for hover/focus, 220ms for panel movement, and at most 4px entrance translation. Under `prefers-reduced-motion: reduce`, disable spatial and continuous animation.
 
-- [ ] **Step 6: Run shell and accessibility tests**
+- [x] **Step 6: Run shell and accessibility tests**
 
 Run: `pnpm --filter loom-desktop test -- app-shell.test.tsx accessibility.test.tsx`
 
 Expected: layout, keyboard resizing, minimum viewport, names, reduced motion hooks, and noise-text bans pass.
 
-- [ ] **Step 7: Commit the visual shell milestone**
+- [x] **Step 7: Commit the visual shell milestone**
 
 ```bash
 git add apps/desktop/src/renderer apps/desktop/tests/renderer
