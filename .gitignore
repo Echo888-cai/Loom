@@ -1,0 +1,5 @@
+.worktrees/
+node_modules/
+dist/
+.loom/runs/
+.DS_Store
