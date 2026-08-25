@@ -3,11 +3,21 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/public.d.ts",
+      "import": "./dist/public.js"
+    }
+  },
   "bin": {
     "loom": "dist/index.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "desktop:dev": "pnpm build && pnpm --filter loom-desktop dev",
+    "desktop:build": "pnpm build && pnpm --filter loom-desktop build",
+    "desktop:test": "pnpm --filter loom-desktop test",
+    "desktop:e2e": "pnpm build && pnpm --filter loom-desktop e2e",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"

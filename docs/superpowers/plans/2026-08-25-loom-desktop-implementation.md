@@ -91,8 +91,9 @@ Loom/
 - Create: `apps/desktop/src/renderer/src/main.tsx`
 - Create: `apps/desktop/src/renderer/src/App.tsx`
 - Test: `apps/desktop/tests/main/window.test.ts`
+- Test: `apps/desktop/tests/renderer/security.test.ts`
 
-- [ ] **Step 1: Write the failing BrowserWindow security test**
+- [x] **Step 1: Write the failing BrowserWindow security test**
 
 ```ts
 import { describe, expect, it } from "vitest"
@@ -120,17 +121,16 @@ describe("createWindowOptions", () => {
 })
 ```
 
-- [ ] **Step 2: Configure the pnpm workspace and public core entry point**
+- [x] **Step 2: Configure the pnpm workspace and public core entry point**
 
 Set `pnpm-workspace.yaml` to include `apps/*` while preserving the existing esbuild allowlist. Add a root `exports` entry that maps `.` to `dist/public.js` and retains `bin: dist/index.js`. `src/public.ts` must export only the reusable contracts the desktop needs:
 
 ```ts
 export { LoomRuntime } from "./runtime.js"
-export type { RuntimeDependencies, RuntimeRunOptions } from "./runtime.js"
+export type { RuntimeDependencies } from "./runtime.js"
 export type { RunResult } from "./agent/loop.js"
 export type { EventRecord, EventStore } from "./events/types.js"
 export { FileEventStore } from "./events/store.js"
-export { StreamingEventStore } from "./events/streaming-store.js"
 export type { ApprovalDecision, ApprovalGate, ApprovalRequest } from "./safety/approval.js"
 export type { ModelProvider } from "./model/types.js"
 ```
@@ -146,18 +146,18 @@ Add root scripts:
 }
 ```
 
-- [ ] **Step 3: Scaffold the desktop package and install dependencies**
+- [x] **Step 3: Scaffold the desktop package and install dependencies**
 
 Use pnpm so resolved versions are recorded in `pnpm-lock.yaml`:
 
 ```bash
 pnpm --filter loom-desktop add electron react react-dom zod zustand @monaco-editor/react monaco-editor @phosphor-icons/react loom@workspace:*
-pnpm --filter loom-desktop add -D electron-vite electron-builder vite typescript vitest jsdom @types/node @types/react @types/react-dom @testing-library/react @testing-library/user-event @playwright/test
+pnpm --filter loom-desktop add -D electron-vite electron-builder 'vite@^7.3.6' '@vitejs/plugin-react@^5.2.0' typescript vitest jsdom @types/node @types/react @types/react-dom @testing-library/react @testing-library/user-event @playwright/test
 ```
 
 Define package scripts `dev`, `build`, `typecheck`, `test`, `e2e`, and `package:mac`. Configure electron-vite entry points for `src/main/index.ts`, `src/preload/index.ts`, and `src/renderer/index.html`.
 
-- [ ] **Step 4: Implement the secure window factory and minimal renderer**
+- [x] **Step 4: Implement the secure window factory and minimal renderer**
 
 `createWindowOptions(preloadPath)` returns the tested options plus `titleBarStyle: "hiddenInset"`, `backgroundColor: "#F7F7F5"`, and `show: false`. `createMainWindow()` must:
 
@@ -166,9 +166,11 @@ Define package scripts `dev`, `build`, `typecheck`, `test`, `e2e`, and `package:
 - return `{ action: "deny" }` from `setWindowOpenHandler`;
 - load the dev URL only when `ELECTRON_RENDERER_URL` exists, otherwise load the bundled renderer.
 
+Bundle the sandboxed preload as CommonJS (`index.cjs`) because Electron runs sandbox preload scripts as plain scripts rather than ESM. Add a renderer Content Security Policy that restricts scripts to Loom's own renderer and blocks object embedding.
+
 The first React screen renders only a plain `Loom` heading so the shell can be exercised before visual work.
 
-- [ ] **Step 5: Run the focused test, then build both packages**
+- [x] **Step 5: Run the focused test, then build both packages**
 
 Run: `pnpm --filter loom-desktop test -- window.test.ts`
 
@@ -178,7 +180,7 @@ Run: `pnpm build && pnpm --filter loom-desktop typecheck && pnpm --filter loom-d
 
 Expected: core emits `dist/public.js`; Electron main, preload, and renderer bundles complete without errors.
 
-- [ ] **Step 6: Commit the shell milestone**
+- [x] **Step 6: Commit the shell milestone**
 
 ```bash
 git add pnpm-workspace.yaml package.json pnpm-lock.yaml src/public.ts apps/desktop
@@ -355,6 +357,8 @@ export class StreamingEventStore implements EventStore {
 ```
 
 Subscriber failures must be isolated so one UI listener cannot fail the Agent Loop; collect them through an optional `onSubscriberError` constructor callback.
+
+Export `StreamingEventStore`, its subscriber types, and `RuntimeRunOptions` from `src/public.ts` only after these types exist.
 
 - [ ] **Step 4: Add runtime session options without breaking the CLI**
 
