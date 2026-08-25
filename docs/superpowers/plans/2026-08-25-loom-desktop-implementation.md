@@ -412,7 +412,7 @@ git commit -m "feat(core): stream durable task events"
 - Test: `apps/desktop/tests/main/approval-gate.test.ts`
 - Test: `apps/desktop/tests/main/task-service.test.ts`
 
-- [ ] **Step 1: Write failing approval and cancellation tests**
+- [x] **Step 1: Write failing approval and cancellation tests**
 
 Test these transitions with a fake runtime factory:
 
@@ -427,7 +427,7 @@ replayTask -> returns ordered JSONL events without starting a model call
 
 Assert a second unresolved approval for the same task rejects with a clear invariant error, and closing the window denies every pending request.
 
-- [ ] **Step 2: Implement DesktopApprovalGate**
+- [x] **Step 2: Implement DesktopApprovalGate**
 
 Construct one gate per running task:
 
@@ -443,7 +443,7 @@ class DesktopApprovalGate implements ApprovalGate {
 
 Keep only the pending request and resolver in main memory. The existing shell tool persists `approval.requested` before it calls the gate and persists `approval.resolved` after the decision, so the renderer learns about approval through the same durable event stream as every other runtime fact. `dispose()` resolves an outstanding request as `deny`.
 
-- [ ] **Step 3: Implement TaskService**
+- [x] **Step 3: Implement TaskService**
 
 Maintain:
 
@@ -460,17 +460,17 @@ type ActiveTask = {
 
 Inject a runtime factory into `TaskService` so tests never call DeepSeek or spawn real shell commands.
 
-- [ ] **Step 4: Wire task handlers to the allowlisted IPC layer**
+- [x] **Step 4: Wire task handlers to the allowlisted IPC layer**
 
 Handlers parse requests with shared schemas, call TaskService, parse results, and redact error messages through one serializer. The serializer must remove any exact value found in `DEEPSEEK_API_KEY` before sending an error to the renderer.
 
-- [ ] **Step 5: Run the desktop service tests**
+- [x] **Step 5: Run the desktop service tests**
 
 Run: `pnpm --filter loom-desktop test -- approval-gate.test.ts task-service.test.ts contracts.test.ts`
 
 Expected: all lifecycle transitions, redaction, cancellation, replay, approval resolution, and cleanup pass.
 
-- [ ] **Step 6: Commit the task-service milestone**
+- [x] **Step 6: Commit the task-service milestone**
 
 ```bash
 git add apps/desktop/src/main apps/desktop/tests/main

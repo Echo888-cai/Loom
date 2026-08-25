@@ -3,7 +3,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { ZodError } from "zod"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
-import { registerWorkspaceIpcHandlers, type IpcMainAdapter } from "../../src/main/ipc.js"
+import { registerTaskIpcHandlers, registerWorkspaceIpcHandlers, type IpcMainAdapter } from "../../src/main/ipc.js"
 import { WorkspaceService } from "../../src/main/workspace-service.js"
 import { channels } from "../../src/shared/channels.js"
 
@@ -64,6 +64,66 @@ describe("workspace IPC handlers", () => {
     expect(ipc.handlers.size).toBe(0)
   })
 })
+
+describe("task IPC handlers", () => {
+  it("validates task input and redacts an API key in service errors", async () => {
+    const ipc = new FakeIpcMain()
+    const tasks = {
+      start: () => { throw new Error("DeepSeek rejected secret-value") },
+      resume: () => ({ taskId: "task-1" }),
+      replay: async () => [],
+      cancel: () => undefined,
+      resolveApproval: () => undefined,
+    }
+    registerTaskIpcHandlers(ipc, tasks, { deepSeekApiKey: "secret-value" })
+
+    await expect(ipc.invoke(channels.startTask, { workspaceRoot: "/repo", goal: "Fix it" })).rejects.toThrow("[redacted]")
+    await expect(ipc.invoke(channels.startTask, { workspaceRoot: "relative", goal: "Fix it" })).rejects.toBeInstanceOf(ZodError)
+  })
+
+  it("routes every allowlisted task action through validated schemas", async () => {
+    const ipc = new FakeIpcMain()
+    const calls: string[] = []
+    const tasks = {
+      start: () => { calls.push("start"); return { taskId: "task-1" } },
+      resume: () => { calls.push("resume"); return { taskId: "task-1" } },
+      replay: async () => { calls.push("replay"); return [validEvent] },
+      cancel: () => { calls.push("cancel") },
+      resolveApproval: () => { calls.push("approval") },
+    }
+    registerTaskIpcHandlers(ipc, tasks)
+
+    await ipc.invoke(channels.startTask, { workspaceRoot: "/repo", goal: "Fix it" })
+    await ipc.invoke(channels.resumeTask, { workspaceRoot: "/repo", taskId: "task-1" })
+    await ipc.invoke(channels.replayTask, { workspaceRoot: "/repo", taskId: "task-1" })
+    await ipc.invoke(channels.cancelTask, { taskId: "task-1" })
+    await ipc.invoke(channels.resolveApproval, { taskId: "task-1", decision: "allow" })
+
+    expect(calls).toEqual(["start", "resume", "replay", "cancel", "approval"])
+  })
+
+  it("redacts API keys from asynchronous replay failures too", async () => {
+    const ipc = new FakeIpcMain()
+    const tasks = {
+      start: () => ({ taskId: "task-1" }),
+      resume: () => ({ taskId: "task-1" }),
+      replay: async () => { throw new Error("request included secret-value") },
+      cancel: () => undefined,
+      resolveApproval: () => undefined,
+    }
+    registerTaskIpcHandlers(ipc, tasks, { deepSeekApiKey: "secret-value" })
+
+    await expect(ipc.invoke(channels.replayTask, { workspaceRoot: "/repo", taskId: "task-1" })).rejects.toThrow("[redacted]")
+  })
+})
+
+const validEvent = {
+  seq: 1,
+  timestamp: "2026-08-25T08:00:00.000Z",
+  taskId: "task-1",
+  type: "task.created",
+  data: { goal: "Fix it" },
+}
 
 class FakeIpcMain implements IpcMainAdapter {
   readonly handlers = new Map<string, (event: unknown, input: unknown) => unknown | Promise<unknown>>()

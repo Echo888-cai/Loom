@@ -1,11 +1,28 @@
-import type { FileNode, ReadFileInput, ReadFileResult, WorkspaceInfo } from "../shared/contracts.js"
+import type {
+  ApprovalDecisionInput,
+  FileNode,
+  ReadFileInput,
+  ReadFileResult,
+  ReplayTaskInput,
+  ResumeTaskInput,
+  StartTaskInput,
+  WorkspaceInfo,
+} from "../shared/contracts.js"
 import { channels } from "../shared/channels.js"
 import {
   FileTreeSchema,
+  ApprovalDecisionInputSchema,
+  CancelTaskInputSchema,
+  EventRecordListSchema,
   NullableWorkspaceInfoSchema,
   ReadFileInputSchema,
   ReadFileResultSchema,
   WorkspaceRootInputSchema,
+  ReplayTaskInputSchema,
+  ResumeTaskInputSchema,
+  StartTaskInputSchema,
+  TaskCommandResultSchema,
+  VoidResponseSchema,
 } from "../shared/contracts.js"
 
 export interface IpcMainAdapter {
@@ -18,6 +35,16 @@ export interface WorkspaceOperations {
   listTree(root: string): Promise<FileNode[]>
   readFile(input: ReadFileInput): Promise<ReadFileResult>
 }
+
+export interface TaskOperations {
+  start(input: StartTaskInput): { taskId: string }
+  resume(input: ResumeTaskInput): { taskId: string }
+  replay(input: ReplayTaskInput): Promise<unknown[]>
+  cancel(taskId: string): void
+  resolveApproval(input: ApprovalDecisionInput): void
+}
+
+export type TaskIpcOptions = { deepSeekApiKey?: string }
 
 export function registerWorkspaceIpcHandlers(
   ipc: IpcMainAdapter,
@@ -41,4 +68,74 @@ export function registerWorkspaceIpcHandlers(
   return () => {
     for (const channel of registeredChannels) ipc.removeHandler(channel)
   }
+}
+
+/**
+ * 将所有 task 相关 IPC 集中在同一个、可审计的白名单中。
+ * 输入在主进程再次验证；服务异常会被统一清洗，确保 API key 绝不回流 renderer。
+ */
+export function registerTaskIpcHandlers(
+  ipc: IpcMainAdapter,
+  tasks: TaskOperations,
+  options: TaskIpcOptions = {},
+): () => void {
+  ipc.handle(channels.startTask, async (_event, rawInput) => {
+    const input = StartTaskInputSchema.parse(rawInput)
+    return TaskCommandResultSchema.parse(runSafely(() => tasks.start(input), options.deepSeekApiKey))
+  })
+
+  ipc.handle(channels.resumeTask, async (_event, rawInput) => {
+    const input = ResumeTaskInputSchema.parse(rawInput)
+    return TaskCommandResultSchema.parse(runSafely(() => tasks.resume(input), options.deepSeekApiKey))
+  })
+
+  ipc.handle(channels.replayTask, async (_event, rawInput) => {
+    const input = ReplayTaskInputSchema.parse(rawInput)
+    return EventRecordListSchema.parse(await runSafelyAsync(() => tasks.replay(input), options.deepSeekApiKey))
+  })
+
+  ipc.handle(channels.cancelTask, async (_event, rawInput) => {
+    const input = CancelTaskInputSchema.parse(rawInput)
+    runSafely(() => tasks.cancel(input.taskId), options.deepSeekApiKey)
+    return VoidResponseSchema.parse(undefined)
+  })
+
+  ipc.handle(channels.resolveApproval, async (_event, rawInput) => {
+    const input = ApprovalDecisionInputSchema.parse(rawInput)
+    runSafely(() => tasks.resolveApproval(input), options.deepSeekApiKey)
+    return VoidResponseSchema.parse(undefined)
+  })
+
+  const registeredChannels = [
+    channels.startTask,
+    channels.resumeTask,
+    channels.replayTask,
+    channels.cancelTask,
+    channels.resolveApproval,
+  ]
+  return () => {
+    for (const channel of registeredChannels) ipc.removeHandler(channel)
+  }
+}
+
+function runSafely<T>(operation: () => T, deepSeekApiKey?: string): T {
+  try {
+    return operation()
+  } catch (error: unknown) {
+    throw new Error(redactError(error, deepSeekApiKey))
+  }
+}
+
+async function runSafelyAsync<T>(operation: () => Promise<T>, deepSeekApiKey?: string): Promise<T> {
+  try {
+    return await operation()
+  } catch (error: unknown) {
+    throw new Error(redactError(error, deepSeekApiKey))
+  }
+}
+
+export function redactError(error: unknown, deepSeekApiKey?: string): string {
+  const message = error instanceof Error ? error.message : String(error)
+  if (!deepSeekApiKey) return message
+  return message.split(deepSeekApiKey).join("[redacted]")
 }
