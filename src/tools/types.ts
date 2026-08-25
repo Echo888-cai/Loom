@@ -39,3 +39,8 @@ export interface ToolDefinition<I> {
   openAiSchema: ToolSchema
   execute(context: ToolContext, input: I): Promise<ToolResult>
 }
+
+export interface ToolRegistry {
+  schemas(): ToolSchema[]
+  execute(name: string, context: ToolContext, input: unknown): Promise<ToolResult>
+}
