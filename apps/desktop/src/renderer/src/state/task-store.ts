@@ -14,6 +14,7 @@ type RendererState = {
   openFile: (path: string) => void
   closeFile: (path: string) => void
   cacheFile: (path: string, content: string) => void
+  beginTask: (taskId: string) => void
   appendEvent: (event: EventRecord) => void
 }
 
@@ -36,6 +37,7 @@ export const useTaskStore = create<RendererState>((set) => ({
     return { openTabs, activePath }
   }),
   cacheFile: (path, content) => set((state) => ({ fileCache: { ...state.fileCache, [path]: content } })),
+  beginTask: (taskId) => set({ activeTaskId: taskId }),
   appendEvent: (event) => set((state) => {
     const history = state.eventsByTask[event.taskId] ?? []
     if (history.some((item) => item.seq === event.seq)) return state

@@ -9,6 +9,9 @@ import { EditorTabs } from "../code/EditorTabs.js"
 import { WorkspaceHeader } from "./WorkspaceHeader.js"
 import { useTaskStore } from "../../state/task-store.js"
 import { AgentConsole } from "../agent/AgentConsole.js"
+import { NewTaskComposer } from "../task/NewTaskComposer.js"
+import { TaskControls } from "../task/TaskControls.js"
+import { projectAgentConsole } from "../../state/event-projection.js"
 
 const minimumConsoleWidth = 320
 const maximumConsoleWidth = 520
@@ -28,6 +31,7 @@ export function AppShell() {
   const setWorkspace = useTaskStore((state) => state.setWorkspace)
   const activeTaskId = useTaskStore((state) => state.activeTaskId)
   const eventsByTask = useTaskStore((state) => state.eventsByTask)
+  const beginTask = useTaskStore((state) => state.beginTask)
 
   useEffect(() => {
     const onResize = () => setWindowIsTooNarrow(window.innerWidth < 760)
@@ -46,7 +50,9 @@ export function AppShell() {
     const nextTree = await window.loom.listWorkspace(selected.root)
     setWorkspace(selected, nextTree)
   }
-  return <div className="app-shell"><WorkspaceHeader workspaceName={workspace?.name} onOpenWorkspace={() => { void openWorkspace() }} /><div className="workbench" style={{ "--agent-width": `${agentWidth}px` } as CSSProperties}><Explorer nodes={tree} onOpenFile={openFile} /><main className="code-workspace" aria-label="Code workspace"><EditorTabs paths={openTabs} activePath={activePath} onSelect={openFile} onClose={closeFile} /><CodeWorkspace workspaceRoot={workspace?.root ?? null} activePath={activePath} diff={activePath ? diffs[activePath] : undefined} /></main>{consoleCollapsed ? <div className="restore-console"><IconButton label="Restore Agent Console" onClick={restoreConsole} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") restoreConsole() }}><SidebarSimple size={17} aria-hidden="true" /></IconButton></div> : <><PanelDivider value={agentWidth} onChange={resize} /><aside className="agent-console" aria-label="Agent Console" style={{ width: `${agentWidth}px` }}><div className="console-toolbar"><span className="console-title">Agent Console</span><IconButton label="Collapse Agent Console" onClick={() => setConsoleCollapsed(true)}><SidebarSimple size={17} aria-hidden="true" /></IconButton></div><AgentConsole taskId={activeTaskId ?? undefined} events={activeTaskId ? eventsByTask[activeTaskId] ?? [] : []} /></aside></>}</div></div>
+  const activeEvents = activeTaskId ? eventsByTask[activeTaskId] ?? [] : []
+  const activeTaskView = projectAgentConsole(activeEvents)
+  return <div className="app-shell"><WorkspaceHeader workspaceName={workspace?.name} onOpenWorkspace={() => { void openWorkspace() }} /><div className="workbench" style={{ "--agent-width": `${agentWidth}px` } as CSSProperties}><Explorer nodes={tree} onOpenFile={openFile} /><main className="code-workspace" aria-label="Code workspace"><EditorTabs paths={openTabs} activePath={activePath} onSelect={openFile} onClose={closeFile} /><CodeWorkspace workspaceRoot={workspace?.root ?? null} activePath={activePath} diff={activePath ? diffs[activePath] : undefined} /></main>{consoleCollapsed ? <div className="restore-console"><IconButton label="Restore Agent Console" onClick={restoreConsole} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") restoreConsole() }}><SidebarSimple size={17} aria-hidden="true" /></IconButton></div> : <><PanelDivider value={agentWidth} onChange={resize} /><aside className="agent-console" aria-label="Agent Console" style={{ width: `${agentWidth}px` }}><div className="console-toolbar"><span className="console-title">Agent Console</span><IconButton label="Collapse Agent Console" onClick={() => setConsoleCollapsed(true)}><SidebarSimple size={17} aria-hidden="true" /></IconButton></div><AgentConsole taskId={activeTaskId ?? undefined} events={activeEvents} /><TaskControls taskId={activeTaskId} status={activeTaskView.status} />{workspace ? <NewTaskComposer workspaceRoot={workspace.root} onStarted={beginTask} /> : null}</aside></>}</div></div>
 }
 
 function readSavedWidth(): number {
