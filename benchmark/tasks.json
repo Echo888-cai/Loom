@@ -1,0 +1,10 @@
+[
+  {
+    "id": "example-test-fix",
+    "repo": "local-example-repo",
+    "commit": "PINNED_COMMIT_SHA",
+    "prompt": "修复一个失败测试，并运行相关验证命令。",
+    "verificationCommands": ["pnpm test"],
+    "expectedFiles": []
+  }
+]

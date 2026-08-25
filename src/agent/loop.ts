@@ -6,6 +6,8 @@ import { FullHistoryCompiler } from "../context/compiler.js"
 import type { ModelMessage, ModelProvider } from "../model/types.js"
 import type { ToolRegistry } from "../tools/types.js"
 import type { Verifier } from "../verification/types.js"
+import type { ApprovalGate } from "../safety/approval.js"
+import type { CommandRunner } from "../process/runner.js"
 import { getLimitReason, type AgentLimits, type LimitState } from "./limits.js"
 
 /** 一次任务运行的输入。 */
@@ -51,6 +53,8 @@ export class AgentLoop {
     private readonly limits: AgentLimits = defaultLimits,
     private readonly compiler: ContextCompiler = new FullHistoryCompiler(),
     private readonly verifier?: Verifier,
+    private readonly approvalGate?: ApprovalGate,
+    private readonly commandRunner?: CommandRunner,
   ) {}
 
   /**
@@ -58,13 +62,21 @@ export class AgentLoop {
    * 四问：输入是 taskId/goal/workspace/signal；副作用是模型、工具和事件 I/O；失败通过状态或事件报告；测试覆盖闭环。
    */
   async run(request: RunRequest): Promise<RunResult> {
-    const state: LimitState = { modelCalls: 0, toolCalls: 0, startedAt: Date.now() }
-    const messages: ModelMessage[] = [
+    return this.runWithState(request)
+  }
+
+  async resume(request: RunRequest, stateInput: { messages: ModelMessage[]; modelCalls: number; toolCalls: number }): Promise<RunResult> {
+    return this.runWithState(request, stateInput)
+  }
+
+  private async runWithState(request: RunRequest, stateInput?: { messages: ModelMessage[]; modelCalls: number; toolCalls: number }): Promise<RunResult> {
+    const state: LimitState = { modelCalls: stateInput?.modelCalls ?? 0, toolCalls: stateInput?.toolCalls ?? 0, startedAt: Date.now() }
+    const messages: ModelMessage[] = stateInput ? [...stateInput.messages] : [
       { role: "system", content: "You are Loom, a careful coding agent. Use tools to inspect the repository before making claims." },
       { role: "user", content: request.goal },
     ]
     const rawDir = join(request.workspaceRoot, ".loom", "runs", request.taskId, "raw")
-    await this.events.append(request.taskId, "task.created", { goal: request.goal, workspaceRoot: request.workspaceRoot })
+    if (!stateInput) await this.events.append(request.taskId, "task.created", { goal: request.goal, workspaceRoot: request.workspaceRoot })
 
     // 这里是 Observe → Decide → Act → Observe 的核心循环。
     while (true) {
@@ -82,7 +94,7 @@ export class AgentLoop {
         await this.events.append(request.taskId, "task.failed", { phase: "model", error: errorMessage(error) })
         return { taskId: request.taskId, status: "failed", steps: state.modelCalls, modelCalls: state.modelCalls, toolCalls: state.toolCalls }
       }
-      await this.events.append(request.taskId, "model.responded", { call: state.modelCalls, content: response.content, toolCalls: response.toolCalls.map((call) => ({ id: call.id, name: call.name })) })
+      await this.events.append(request.taskId, "model.responded", { call: state.modelCalls, content: response.content, toolCalls: response.toolCalls.map((call) => ({ id: call.id, name: call.name, argumentsJson: call.argumentsJson })) })
 
       // assistant ToolCall 必须进入历史，否则下一轮模型不知道自己刚刚请求了什么。
       const assistantMessage: ModelMessage = { role: "assistant", content: response.content, toolCalls: response.toolCalls }
@@ -120,7 +132,7 @@ export class AgentLoop {
   private async executeTool(request: RunRequest, rawDir: string, name: string, argumentsJson: string) {
     try {
       const input: unknown = JSON.parse(argumentsJson)
-        return await this.tools.execute(name, { workspaceRoot: request.workspaceRoot, taskId: request.taskId, signal: request.signal ?? new AbortController().signal, maxOutputChars: this.limits.maxToolOutputChars ?? 12_000, rawDir, eventStore: this.events, ...(this.verifier ? { verifier: this.verifier } : {}) }, input)
+        return await this.tools.execute(name, { workspaceRoot: request.workspaceRoot, taskId: request.taskId, signal: request.signal ?? new AbortController().signal, maxOutputChars: this.limits.maxToolOutputChars ?? 12_000, rawDir, eventStore: this.events, ...(this.verifier ? { verifier: this.verifier } : {}), ...(this.approvalGate ? { approvalGate: this.approvalGate } : {}), ...(this.commandRunner ? { commandRunner: this.commandRunner } : {}) }, input)
     } catch (error: unknown) {
       return { ok: false, content: `Tool execution failed: ${errorMessage(error)}` }
     }

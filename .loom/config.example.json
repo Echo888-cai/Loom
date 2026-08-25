@@ -1,0 +1,12 @@
+{
+  "verificationCommands": [
+    "pnpm test",
+    "pnpm build"
+  ],
+  "limits": {
+    "maxModelCalls": 40,
+    "maxToolCalls": 80,
+    "maxDurationMs": 900000,
+    "maxToolOutputChars": 12000
+  }
+}
