@@ -1,3 +1,13 @@
+/**
+ * Loom 的运行配置加载器。
+ *
+ * 这层的职责是把两个外部输入转换成一个可信的 RuntimeConfig：
+ * 1. 环境变量（尤其是 API Key）；
+ * 2. workspace 下可选的 `.loom/config.json`。
+ *
+ * 注意：TypeScript 类型只在编译期存在，无法阻止错误 JSON 在运行时进入程序，
+ * 所以这里还需要 zod 做一次运行时校验。
+ */
 // Node.js 的文件系统 API。`/promises` 版本会返回 Promise，适合 async/await。
 import { readFile, realpath } from "node:fs/promises"
 // join 用来以跨平台方式拼接路径，而不是手工写 `/`。
@@ -24,7 +34,15 @@ const defaultLimits = {
   maxToolOutputChars: 12_000,
 }
 
-// 这是 Loom 运行时真正依赖的配置对象。
+/**
+ * 已经完成校验、可以交给运行时使用的配置。
+ *
+ * 四问：
+ * - 输入：`workspaceRoot`、DeepSeek API Key、可选 JSON 配置。
+ * - 外部副作用：读取 workspace 和配置文件；不会写文件、不会调用网络。
+ * - 失败方式：workspace 不存在、API Key 缺失、JSON 无效或配置类型错误时抛错。
+ * - 测试位置：`tests/config.test.ts` 覆盖默认值、配置文件和缺少 API Key。
+ */
 export type RuntimeConfig = {
   workspaceRoot: string
   deepseekApiKey: string
@@ -37,6 +55,15 @@ export type RuntimeConfig = {
   }
 }
 
+/**
+ * 从当前目录加载 Loom 配置。
+ *
+ * 四问：
+ * - 输入：`cwd` 是候选 workspace；`env` 是环境变量集合，通常传 `process.env`。
+ * - 外部副作用：只读本地文件系统；不会修改环境变量，也不会产生网络请求。
+ * - 失败方式：抛出 Error；调用 CLI 的上层应捕获并转成用户可读错误。
+ * - 测试位置：`tests/config.test.ts`。
+ */
 export async function loadConfig(cwd: string, env: NodeJS.ProcessEnv): Promise<RuntimeConfig> {
   // realpath 会把相对路径和 symlink 解析为真实路径，后续安全判断有统一基准。
   const workspaceRoot = await realpath(cwd)

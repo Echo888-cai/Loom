@@ -2,6 +2,10 @@
 import { access, realpath } from "node:fs/promises"
 import { isAbsolute, relative, resolve } from "node:path"
 
+/**
+ * 工具遇到安全违规时使用的领域错误。
+ * 四问：输入是错误消息；构造本身无副作用；调用方可以捕获它；路径测试验证其类型。
+ */
 // 工具遇到安全违规时使用专门错误类型，调用方可以和普通 I/O 错误区分。
 export class PathPolicyError extends Error {
   constructor(message: string) {
@@ -10,6 +14,15 @@ export class PathPolicyError extends Error {
   }
 }
 
+/**
+ * 将用户/模型提供的路径解析成允许访问的真实路径。
+ *
+ * 四问：
+ * - 输入：workspace root、请求路径、可选 allowMissing。
+ * - 外部副作用：只读 realpath/access；不会写文件或执行命令。
+ * - 失败方式：workspace 外、保护目录、symlink 越界或路径不存在时 reject PathPolicyError。
+ * - 测试位置：`tests/safety/path-policy.test.ts` 覆盖合法路径、越界路径、保护目录和 symlink。
+ */
 export async function assertWorkspacePath(root: string, requested: string, options: { allowMissing?: boolean } = {}): Promise<string> {
   // 统一把 workspace root 解析为真实路径。
   const workspace = await realpath(root)

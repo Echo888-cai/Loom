@@ -9,6 +9,10 @@ import type { ToolDefinition, ToolResult } from "./types.js"
 const inputSchema = z.object({ path: z.string().min(1), startLine: z.number().int().positive().optional(), endLine: z.number().int().positive().optional() })
 type Input = z.infer<typeof inputSchema>
 
+/**
+ * 把工具输出压缩到 Context 预算以内。
+ * 四问：输入是原始文本和最大字符数；无外部副作用；不会抛错但会标记 truncated；read_file 测试验证头尾和截断。
+ */
 // Context 预算有限：保留头部和尾部，中间折叠，并把完整内容落盘。
 function bounded(text: string, max: number): { text: string; truncated: boolean } {
   if (text.length <= max) return { text, truncated: false }
@@ -16,10 +20,23 @@ function bounded(text: string, max: number): { text: string; truncated: boolean 
   return { text: `${text.slice(0, head)}\n...[truncated]...\n${text.slice(-tail)}`, truncated: true }
 }
 
+/**
+ * 创建 read_file 工具定义。
+ * 四问：输入是无状态工厂调用；创建阶段无文件副作用；执行错误在 execute 中处理；read-file 测试覆盖其行为。
+ */
 export function createReadFileTool(): ToolDefinition<Input> {
   return {
     name: "read_file", description: "Read a file within the workspace.", schema: inputSchema,
     openAiSchema: { type: "function", function: { name: "read_file", description: "Read a file within the workspace.", parameters: { type: "object", properties: { path: { type: "string" }, startLine: { type: "integer" }, endLine: { type: "integer" } }, required: ["path"] } } },
+    /**
+     * 执行一次文件读取。
+     *
+     * 四问：
+     * - 输入：ToolContext 和已通过 schema 的 path/startLine/endLine。
+     * - 外部副作用：读取文件；输出过长时会在 rawDir 写一个完整预览文件。
+     * - 失败方式：路径不安全或文件不存在返回 ok=false；其他意外 I/O 错误继续 reject。
+     * - 测试位置：`tests/tools/read-file.test.ts` 的行范围、截断和缺失文件用例。
+     */
     async execute(context, input): Promise<ToolResult> {
       try {
         // 所有文件读取必须经过 path policy，工具本身不能绕过安全层。
