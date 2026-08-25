@@ -294,7 +294,7 @@ git commit -m "feat(desktop): add validated IPC boundary"
 - Create: `tests/events/streaming-store.test.ts`
 - Create: `tests/runtime/runtime-session.test.ts`
 
-- [ ] **Step 1: Write the failing persist-before-publish test**
+- [x] **Step 1: Write the failing persist-before-publish test**
 
 ```ts
 it("publishes only after the inner store persists", async () => {
@@ -317,7 +317,7 @@ it("publishes only after the inner store persists", async () => {
 
 Also assert unsubscribe stops delivery and a rejected inner append publishes nothing.
 
-- [ ] **Step 2: Write the failing AgentLoop reasoning test**
+- [x] **Step 2: Write the failing AgentLoop reasoning test**
 
 Make the fake provider return:
 
@@ -331,7 +331,7 @@ Make the fake provider return:
 
 Assert `model.responded.data.reasoningContent` contains the exact provider text and the projected assistant message retains it for resume.
 
-- [ ] **Step 3: Implement StreamingEventStore**
+- [x] **Step 3: Implement StreamingEventStore**
 
 ```ts
 export type EventSubscriber = (event: EventRecord) => void
@@ -362,7 +362,7 @@ Subscriber failures must be isolated so one UI listener cannot fail the Agent Lo
 
 Export `StreamingEventStore`, its subscriber types, and `RuntimeRunOptions` from `src/public.ts` only after these types exist.
 
-- [ ] **Step 4: Add runtime session options without breaking the CLI**
+- [x] **Step 4: Add runtime session options without breaking the CLI**
 
 Introduce:
 
@@ -384,7 +384,7 @@ replay(taskId: string, cwd: string, options?: Pick<RuntimeRunOptions, "eventStor
 
 Use the supplied task ID, signal, and store when present. Preserve the current two-argument CLI calls. Pass `reasoningContent` into `model.responded` and the assistant message. Update `projectRun()` to restore `reasoningContent` from the event so resume reconstructs the same assistant message rather than losing provider-visible reasoning.
 
-- [ ] **Step 5: Verify core behavior and CLI regression**
+- [x] **Step 5: Verify core behavior and CLI regression**
 
 Run: `pnpm test -- streaming-store.test.ts runtime-session.test.ts loop.test.ts cli.test.ts`
 

@@ -94,10 +94,20 @@ export class AgentLoop {
         await this.events.append(request.taskId, "task.failed", { phase: "model", error: errorMessage(error) })
         return { taskId: request.taskId, status: "failed", steps: state.modelCalls, modelCalls: state.modelCalls, toolCalls: state.toolCalls }
       }
-      await this.events.append(request.taskId, "model.responded", { call: state.modelCalls, content: response.content, toolCalls: response.toolCalls.map((call) => ({ id: call.id, name: call.name, argumentsJson: call.argumentsJson })) })
+      await this.events.append(request.taskId, "model.responded", {
+        call: state.modelCalls,
+        content: response.content,
+        ...(response.reasoningContent === undefined ? {} : { reasoningContent: response.reasoningContent }),
+        toolCalls: response.toolCalls.map((call) => ({ id: call.id, name: call.name, argumentsJson: call.argumentsJson })),
+      })
 
       // assistant ToolCall 必须进入历史，否则下一轮模型不知道自己刚刚请求了什么。
-      const assistantMessage: ModelMessage = { role: "assistant", content: response.content, toolCalls: response.toolCalls }
+      const assistantMessage: ModelMessage = {
+        role: "assistant",
+        content: response.content,
+        ...(response.reasoningContent === undefined ? {} : { reasoningContent: response.reasoningContent }),
+        toolCalls: response.toolCalls,
+      }
       messages.push(assistantMessage)
       if (response.toolCalls.length === 0) {
         await this.events.append(request.taskId, "task.candidate_done", { content: response.content })

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import type { EventRecord, EventStore } from "../../src/events/types.js"
 import { AgentLoop } from "../../src/agent/loop.js"
 import type { ModelMessage, ModelProvider, ModelRequest, ModelResponse } from "../../src/model/types.js"
+import { projectRun } from "../../src/state/projection.js"
 import type { ToolContext, ToolRegistry, ToolResult } from "../../src/tools/types.js"
 
 class MemoryEventStore implements EventStore {
@@ -82,5 +83,29 @@ describe("AgentLoop", () => {
     const result = await new AgentLoop(provider, new FinishRegistry(), store, { maxModelCalls: 2, maxToolCalls: 2, maxDurationMs: 10_000 }).run({ taskId: "task-3", goal: "finish", workspaceRoot: "/tmp/repo" })
 
     expect(result).toMatchObject({ status: "verified", modelCalls: 1, toolCalls: 1 })
+  })
+
+  it("persists provider reasoning and restores it into the resumed assistant message", async () => {
+    const reasoningContent = "The failing behavior points to token refresh ordering."
+    const store = new MemoryEventStore()
+    const provider = new FakeProvider([{
+      content: "I will inspect the file.",
+      reasoningContent,
+      toolCalls: [],
+    }])
+
+    await new AgentLoop(provider, new FakeRegistry(), store).run({
+      taskId: "task-reasoning",
+      goal: "Fix authentication",
+      workspaceRoot: "/tmp/repo",
+    })
+
+    const modelResponse = store.events.find((event) => event.type === "model.responded")
+    expect(modelResponse?.data).toMatchObject({ reasoningContent })
+    expect(projectRun(store.events).messages.at(-1)).toEqual({
+      role: "assistant",
+      content: "I will inspect the file.",
+      reasoningContent,
+    })
   })
 })

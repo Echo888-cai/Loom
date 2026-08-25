@@ -32,7 +32,13 @@ export function projectRun(events: EventRecord[]): ResumeState {
     if (event.type === "model.responded") {
       const data = asRecord(event.data)
       const calls = Array.isArray(data.toolCalls) ? data.toolCalls.filter(isToolCall) : []
-      messages.push({ role: "assistant", content: typeof data.content === "string" || data.content === null ? data.content : null, ...(calls.length ? { toolCalls: calls } : {}) })
+      const reasoningContent = typeof data.reasoningContent === "string" || data.reasoningContent === null ? data.reasoningContent : undefined
+      messages.push({
+        role: "assistant",
+        content: typeof data.content === "string" || data.content === null ? data.content : null,
+        ...(reasoningContent === undefined ? {} : { reasoningContent }),
+        ...(calls.length ? { toolCalls: calls } : {}),
+      })
     }
     if (event.type === "tool.completed") {
       const data = asRecord(event.data)
