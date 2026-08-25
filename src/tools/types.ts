@@ -2,6 +2,8 @@
 import type { ToolSchema } from "../model/types.js"
 import type { z } from "zod"
 import type { EventStore } from "../events/types.js"
+import type { ApprovalGate } from "../safety/approval.js"
+import type { CommandRunner } from "../process/runner.js"
 
 /**
  * 每次工具调用拿到的运行时上下文。
@@ -15,6 +17,8 @@ export interface ToolContext {
   maxOutputChars: number
   rawDir: string
   eventStore?: EventStore
+  approvalGate?: ApprovalGate
+  commandRunner?: CommandRunner
 }
 
 /**
