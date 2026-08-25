@@ -27,6 +27,28 @@ describe("projectAgentConsole", () => {
     expect(view.status).toBe("approval_required")
     expect(view.pendingApproval).toMatchObject({ command: "pnpm test", cwd: "/repo" })
   })
+
+  it("uses the verifier's persisted name and passed fields, and preserves a terminal failure reason", () => {
+    const view = projectAgentConsole([
+      event(1, "verification.completed", { name: "pnpm test", passed: false, output: "auth test failed" }),
+      event(2, "task.failed", { phase: "model", error: "Provider unavailable" }),
+    ])
+
+    expect(view.evidence).toEqual([{ label: "pnpm test", outcome: "failed", content: "auth test failed" }])
+    expect(view.status).toBe("failed")
+    expect(view.statusMessage).toBe("Provider unavailable")
+  })
+
+  it("returns to running after verification asks the Agent to continue", () => {
+    const view = projectAgentConsole([
+      event(1, "verification.completed", { name: "pnpm test", passed: false, output: "auth test failed" }),
+      event(2, "task.verification_continue", { evidence: ["auth test failed"] }),
+      event(3, "model.requested", { call: 2 }),
+    ])
+
+    expect(view.status).toBe("running")
+    expect(view.current).toEqual({ label: "Thinking" })
+  })
 })
 
 function event(seq: number, type: string, data: Record<string, unknown>) {

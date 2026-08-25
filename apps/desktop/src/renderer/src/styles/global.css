@@ -56,6 +56,8 @@ button:focus-visible, [role="separator"]:focus-visible { outline: 2px solid var(
 .agent-row { display: grid; gap: 3px; padding: 8px 0; border-bottom: 1px solid var(--line); }
 .agent-row strong { font-size: 12px; font-weight: 600; }
 .agent-row span { color: var(--text-secondary); font-size: 12px; }
+.tool-output-toggle { justify-self: start; padding: 2px 0; border: 0; background: transparent; color: var(--accent); font-size: 11px; }
+.tool-output { margin: 3px 0 0; padding: 8px; overflow: auto; border: 1px solid var(--line); border-radius: 4px; background: var(--surface-subtle); color: var(--text-secondary); font: 11px/1.5 var(--font-code); white-space: pre-wrap; }
 .approval-surface { display: grid; gap: 6px; margin-top: 14px; padding: 10px; border: 1px solid #ebcf9d; border-radius: var(--radius-sm); background: #fff8ec; color: var(--text-primary); }
 .approval-surface span, .approval-surface small { color: var(--text-secondary); }
 .approval-surface div { display: flex; gap: 6px; margin-top: 2px; }
@@ -65,10 +67,19 @@ button:focus-visible, [role="separator"]:focus-visible { outline: 2px solid var(
 .task-composer textarea { min-width: 0; min-height: 52px; resize: vertical; padding: 8px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); color: var(--text-primary); }
 .task-composer button { align-self: end; min-height: 32px; padding: 0 10px; border: 0; border-radius: var(--radius-sm); background: var(--accent); color: white; }
 .task-composer button:disabled { opacity: .45; cursor: default; }
+.task-error { grid-column: 1 / -1; margin: -2px 0 0; color: var(--failure); font-size: 11px; }
 .task-controls { display: flex; justify-content: flex-end; padding: 0 12px 8px; }
 .task-controls button { min-height: 26px; padding: 0 7px; border: 0; border-radius: 4px; background: transparent; color: var(--text-muted); font-size: 11px; }
 .task-controls button:hover { background: var(--surface-subtle); color: var(--text-primary); }
 .task-controls button:disabled { opacity: .55; cursor: default; }
+.task-state { display: grid; gap: 4px; margin: 4px 0 14px; padding: 10px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface-subtle); }
+.task-state strong { font-size: 12px; }
+.task-state span, .task-state p { margin: 0; color: var(--text-secondary); font-size: 12px; }
+.task-state-verified { border-color: #c9eadc; background: var(--success-soft); }
+.task-state-verified strong { color: var(--success); }
+.task-state-failed, .task-state-blocked { border-color: #f1d0cc; background: #fff6f5; }
+.task-state-failed strong, .task-state-blocked strong { color: var(--failure); }
+.task-state-cancelled { color: var(--text-secondary); }
 .palette-scrim { position: fixed; z-index: 10; inset: 0; display: grid; place-items: start center; padding-top: min(18dvh, 160px); background: rgba(17, 24, 39, .14); }
 .command-palette { width: min(440px, calc(100vw - 32px)); overflow: hidden; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); box-shadow: 0 18px 50px rgba(17, 24, 39, .16); outline: none; }
 .palette-title { padding: 12px 14px 8px; color: var(--text-muted); font-size: 10px; font-weight: 650; letter-spacing: .07em; text-transform: uppercase; }

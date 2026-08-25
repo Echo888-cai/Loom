@@ -21,6 +21,19 @@ describe("NewTaskComposer", () => {
     expect(onStarted).toHaveBeenCalledWith("task-1")
   })
 
+  it("keeps the goal and shows a safe inline failure when task start is rejected", async () => {
+    const startTask = vi.fn().mockRejectedValue(new Error("DeepSeek rejected sk-secret-key"))
+    Object.defineProperty(window, "loom", { configurable: true, value: { startTask } })
+    render(<NewTaskComposer workspaceRoot="/repo" onStarted={vi.fn()} />)
+    const input = screen.getByLabelText("New task")
+    fireEvent.change(input, { target: { value: "Fix the authentication regression" } })
+    fireEvent.submit(input.closest("form")!)
+
+    expect((await screen.findByRole("alert")).textContent).toBe("Unable to start task.")
+    expect((screen.getByLabelText("New task") as HTMLTextAreaElement).value).toBe("Fix the authentication regression")
+    expect(document.body.textContent).not.toContain("sk-secret-key")
+  })
+
   it("cancels the active task only once", async () => {
     const cancelTask = vi.fn().mockResolvedValue(undefined)
     Object.defineProperty(window, "loom", { configurable: true, value: { cancelTask } })

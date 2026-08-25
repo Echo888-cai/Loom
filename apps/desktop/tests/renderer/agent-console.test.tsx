@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 import { AgentConsole } from "../../src/renderer/src/features/agent/AgentConsole.js"
 
@@ -13,6 +13,15 @@ describe("AgentConsole", () => {
     rerender(<AgentConsole events={[event(2, "model.requested", { call: 2 })]} />)
     expect(screen.getByText("Thinking")).toBeTruthy()
     expect(document.body.textContent).not.toContain("The token refresh order is wrong.")
+  })
+
+  it("keeps tool output collapsed until the user asks to inspect it", () => {
+    render(<AgentConsole events={[event(1, "tool.completed", { name: "shell", content: "Command exited with code 0\nprivate verbose output" })]} />)
+
+    expect(screen.getByText("Command exited with code 0")).toBeTruthy()
+    expect(screen.queryByText(/private verbose output/)).toBeNull()
+    fireEvent.click(screen.getByRole("button", { name: "Show output for shell" }))
+    expect(screen.getByText(/private verbose output/)).toBeTruthy()
   })
 })
 
