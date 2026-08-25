@@ -1,9 +1,10 @@
 import { create } from "zustand"
-import type { EventRecord, FileNode, WorkspaceInfo } from "../../../shared/contracts.js"
+import type { EventRecord, FileNode, TaskSummary, WorkspaceInfo } from "../../../shared/contracts.js"
 
 type RendererState = {
   workspace: WorkspaceInfo | null
   tree: FileNode[]
+  tasks: TaskSummary[]
   eventsByTask: Record<string, EventRecord[]>
   activeTaskId: string | null
   openTabs: string[]
@@ -11,6 +12,7 @@ type RendererState = {
   fileCache: Record<string, string>
   diffs: Record<string, string>
   setWorkspace: (workspace: WorkspaceInfo | null, tree?: FileNode[]) => void
+  setTasks: (tasks: TaskSummary[]) => void
   openFile: (path: string) => void
   closeFile: (path: string) => void
   cacheFile: (path: string, content: string) => void
@@ -22,13 +24,15 @@ type RendererState = {
 export const useTaskStore = create<RendererState>((set) => ({
   workspace: null,
   tree: [],
+  tasks: [],
   eventsByTask: {},
   activeTaskId: null,
   openTabs: [],
   activePath: null,
   fileCache: {},
   diffs: {},
-  setWorkspace: (workspace, tree = []) => set({ workspace, tree, openTabs: [], activePath: null, fileCache: {}, diffs: {} }),
+  setWorkspace: (workspace, tree = []) => set({ workspace, tree, tasks: [], activeTaskId: null, openTabs: [], activePath: null, fileCache: {}, diffs: {} }),
+  setTasks: (tasks) => set({ tasks }),
   openFile: (path) => set((state) => ({ openTabs: state.openTabs.includes(path) ? state.openTabs : [...state.openTabs, path], activePath: path })),
   closeFile: (path) => set((state) => {
     const index = state.openTabs.indexOf(path)

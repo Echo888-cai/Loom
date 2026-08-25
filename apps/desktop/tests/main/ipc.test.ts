@@ -44,6 +44,7 @@ describe("workspace IPC handlers", () => {
     const malformedService = {
       chooseWorkspace: async () => ({ root: "relative", name: "repo" }),
       listTree: async () => [],
+      listTasks: async () => [],
       readFile: async () => ({ relativePath: "readme.txt", content: "ok" }),
     }
     registerWorkspaceIpcHandlers(ipc, malformedService)
@@ -58,6 +59,7 @@ describe("workspace IPC handlers", () => {
     expect([...ipc.handlers.keys()].sort()).toEqual([
       channels.chooseWorkspace,
       channels.listWorkspace,
+      channels.listTasks,
       channels.readFile,
     ].sort())
     dispose()

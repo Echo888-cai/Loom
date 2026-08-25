@@ -10,6 +10,7 @@ describe("Loom preload bridge", () => {
     expect(Object.keys(api).sort()).toEqual([
       "cancelTask",
       "chooseWorkspace",
+      "listTasks",
       "listWorkspace",
       "onTaskEvent",
       "readFile",

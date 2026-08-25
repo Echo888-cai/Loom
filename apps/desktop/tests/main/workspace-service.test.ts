@@ -129,6 +129,17 @@ describe("WorkspaceService workspace discovery", () => {
 
     await expect(service.listTree(workspaceRoot)).rejects.toMatchObject({ code: "TREE_LIMIT_EXCEEDED" })
   })
+
+  it("lists durable tasks newest first using their original goal and terminal state", async () => {
+    await mkdir(join(workspaceRoot, ".loom", "runs", "task-2"), { recursive: true })
+    await writeFile(join(workspaceRoot, ".loom", "runs", "task-1", "events.jsonl"), `${JSON.stringify({ seq: 1, timestamp: "2026-08-25T08:00:00.000Z", taskId: "task-1", type: "task.created", data: { goal: "Fix login" } })}\n${JSON.stringify({ seq: 2, timestamp: "2026-08-25T08:01:00.000Z", taskId: "task-1", type: "task.verified", data: {} })}\n`, "utf8")
+    await writeFile(join(workspaceRoot, ".loom", "runs", "task-2", "events.jsonl"), `${JSON.stringify({ seq: 1, timestamp: "2026-08-25T09:00:00.000Z", taskId: "task-2", type: "task.created", data: { goal: "Add a command palette" } })}\n${JSON.stringify({ seq: 2, timestamp: "2026-08-25T09:01:00.000Z", taskId: "task-2", type: "task.blocked", data: {} })}\n`, "utf8")
+
+    await expect(new WorkspaceService().listTasks(workspaceRoot)).resolves.toEqual([
+      { taskId: "task-2", goal: "Add a command palette", status: "blocked", timestamp: "2026-08-25T09:01:00.000Z" },
+      { taskId: "task-1", goal: "Fix login", status: "verified", timestamp: "2026-08-25T08:01:00.000Z" },
+    ])
+  })
 })
 
 function flattenPaths(nodes: Array<{ relativePath: string; children?: unknown }>): string[] {

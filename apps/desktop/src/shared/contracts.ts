@@ -97,6 +97,14 @@ export const ReadFileResultSchema = z.object({
 }).strict()
 
 export const TaskCommandResultSchema = z.object({ taskId: TaskIdSchema }).strict()
+export const TaskStatusSchema = z.enum(["running", "candidate_done", "verified", "blocked", "failed", "cancelled"])
+export const TaskSummarySchema = z.object({
+  taskId: TaskIdSchema,
+  goal: z.string().min(1),
+  status: TaskStatusSchema,
+  timestamp: z.string().datetime({ offset: true }),
+}).strict()
+export const TaskSummaryListSchema = z.array(TaskSummarySchema)
 export const EventRecordListSchema = z.array(EventRecordSchema)
 export const CancelTaskInputSchema = z.object({ taskId: TaskIdSchema }).strict()
 export const WorkspaceRootInputSchema = z.object({ workspaceRoot: WorkspaceRootSchema }).strict()
@@ -112,10 +120,12 @@ export type TaskEventEnvelope = z.infer<typeof EventEnvelopeSchema>
 export type WorkspaceInfo = z.infer<typeof WorkspaceInfoSchema>
 export type ReadFileResult = z.infer<typeof ReadFileResultSchema>
 export type TaskCommandResult = z.infer<typeof TaskCommandResultSchema>
+export type TaskSummary = z.infer<typeof TaskSummarySchema>
 
 export interface LoomDesktopApi {
   chooseWorkspace(): Promise<WorkspaceInfo | null>
   listWorkspace(root: string): Promise<FileNode[]>
+  listTasks(root: string): Promise<TaskSummary[]>
   readFile(input: ReadFileInput): Promise<ReadFileResult>
   startTask(input: StartTaskInput): Promise<TaskCommandResult>
   resumeTask(input: ResumeTaskInput): Promise<TaskCommandResult>

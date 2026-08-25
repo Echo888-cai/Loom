@@ -27,12 +27,14 @@ export function AppShell() {
   const paletteInvoker = useRef<HTMLElement | null>(null)
   const workspace = useTaskStore((state) => state.workspace)
   const tree = useTaskStore((state) => state.tree)
+  const tasks = useTaskStore((state) => state.tasks)
   const openTabs = useTaskStore((state) => state.openTabs)
   const activePath = useTaskStore((state) => state.activePath)
   const diffs = useTaskStore((state) => state.diffs)
   const openFile = useTaskStore((state) => state.openFile)
   const closeFile = useTaskStore((state) => state.closeFile)
   const setWorkspace = useTaskStore((state) => state.setWorkspace)
+  const setTasks = useTaskStore((state) => state.setTasks)
   const activeTaskId = useTaskStore((state) => state.activeTaskId)
   const eventsByTask = useTaskStore((state) => state.eventsByTask)
   const beginTask = useTaskStore((state) => state.beginTask)
@@ -67,8 +69,15 @@ export function AppShell() {
   const openWorkspace = async () => {
     const selected = await window.loom.chooseWorkspace()
     if (!selected) return
-    const nextTree = await window.loom.listWorkspace(selected.root)
+    const [nextTree, nextTasks] = await Promise.all([window.loom.listWorkspace(selected.root), window.loom.listTasks(selected.root)])
     setWorkspace(selected, nextTree)
+    setTasks(nextTasks)
+  }
+  const selectTask = async (taskId: string) => {
+    if (!workspace) return
+    const events = await window.loom.replayTask({ workspaceRoot: workspace.root, taskId })
+    beginTask(taskId)
+    for (const event of events) appendEvent(event)
   }
   const activeEvents = activeTaskId ? eventsByTask[activeTaskId] ?? [] : []
   const activeTaskView = projectAgentConsole(activeEvents)
@@ -81,7 +90,7 @@ export function AppShell() {
     ...(activeTaskId && workspace ? [{ id: "replay-task", label: "Replay Current Task", run: async () => { for (const event of await window.loom.replayTask({ workspaceRoot: workspace.root, taskId: activeTaskId })) appendEvent(event) } }] : []),
     ...(activeTaskId && workspace && (activeTaskView.status === "blocked" || activeTaskView.status === "failed" || activeTaskView.status === "cancelled") ? [{ id: "resume-task", label: "Resume Current Task", run: async () => beginTask((await window.loom.resumeTask({ workspaceRoot: workspace.root, taskId: activeTaskId })).taskId) }] : []),
   ]
-  return <div className="app-shell"><WorkspaceHeader workspaceName={workspace?.name} onOpenWorkspace={() => { void openWorkspace() }} /><div className={`workbench${explorerCollapsed ? " explorer-collapsed" : ""}`} style={{ "--agent-width": `${agentWidth}px` } as CSSProperties}>{explorerCollapsed ? null : <Explorer nodes={tree} onOpenFile={openFile} />}<main className="code-workspace" aria-label="Code workspace"><EditorTabs paths={openTabs} activePath={activePath} onSelect={openFile} onClose={closeFile} /><CodeWorkspace workspaceRoot={workspace?.root ?? null} activePath={activePath} diff={activePath ? diffs[activePath] : undefined} /></main>{consoleCollapsed ? <div className="restore-console"><IconButton label="Restore Agent Console" onClick={restoreConsole} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") restoreConsole() }}><SidebarSimple size={17} aria-hidden="true" /></IconButton></div> : <><PanelDivider value={agentWidth} onChange={resize} /><aside className="agent-console" aria-label="Agent Console" style={{ width: `${agentWidth}px` }}><div className="console-toolbar"><span className="console-title">Agent Console</span><IconButton label="Collapse Agent Console" onClick={() => setConsoleCollapsed(true)}><SidebarSimple size={17} aria-hidden="true" /></IconButton></div><AgentConsole taskId={activeTaskId ?? undefined} events={activeEvents} /><TaskControls taskId={activeTaskId} status={activeTaskView.status} />{workspace ? <NewTaskComposer workspaceRoot={workspace.root} onStarted={beginTask} /> : null}</aside></>}</div><CommandPalette open={paletteOpen} onClose={closePalette} commands={commands} /></div>
+  return <div className="app-shell"><WorkspaceHeader workspaceName={workspace?.name} onOpenWorkspace={() => { void openWorkspace() }} /><div className={`workbench${explorerCollapsed ? " explorer-collapsed" : ""}`} style={{ "--agent-width": `${agentWidth}px` } as CSSProperties}>{explorerCollapsed ? null : <Explorer nodes={tree} tasks={tasks} activeTaskId={activeTaskId} onOpenFile={openFile} onSelectTask={(taskId) => { void selectTask(taskId) }} />}<main className="code-workspace" aria-label="Code workspace"><EditorTabs paths={openTabs} activePath={activePath} onSelect={openFile} onClose={closeFile} /><CodeWorkspace workspaceRoot={workspace?.root ?? null} activePath={activePath} diff={activePath ? diffs[activePath] : undefined} /></main>{consoleCollapsed ? <div className="restore-console"><IconButton label="Restore Agent Console" onClick={restoreConsole} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") restoreConsole() }}><SidebarSimple size={17} aria-hidden="true" /></IconButton></div> : <><PanelDivider value={agentWidth} onChange={resize} /><aside className="agent-console" aria-label="Agent Console" style={{ width: `${agentWidth}px` }}><div className="console-toolbar"><span className="console-title">Agent Console</span><IconButton label="Collapse Agent Console" onClick={() => setConsoleCollapsed(true)}><SidebarSimple size={17} aria-hidden="true" /></IconButton></div><AgentConsole taskId={activeTaskId ?? undefined} events={activeEvents} /><TaskControls taskId={activeTaskId} status={activeTaskView.status} />{workspace ? <NewTaskComposer workspaceRoot={workspace.root} onStarted={beginTask} /> : null}</aside></>}</div><CommandPalette open={paletteOpen} onClose={closePalette} commands={commands} /></div>
 }
 
 function readSavedWidth(): number {

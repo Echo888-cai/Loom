@@ -25,12 +25,14 @@ describe("AppShell", () => {
   it("opens a repository through the narrow desktop API and loads its tree", async () => {
     const chooseWorkspace = vi.fn().mockResolvedValue({ root: "/repo", name: "repo" })
     const listWorkspace = vi.fn().mockResolvedValue([{ name: "src", relativePath: "src", kind: "directory", children: [] }])
-    Object.defineProperty(window, "loom", { configurable: true, value: { chooseWorkspace, listWorkspace } })
+    const listTasks = vi.fn().mockResolvedValue([])
+    Object.defineProperty(window, "loom", { configurable: true, value: { chooseWorkspace, listWorkspace, listTasks } })
     render(<AppShell />)
 
     fireEvent.click(screen.getByRole("button", { name: "Open repository" }))
 
     await waitFor(() => expect(listWorkspace).toHaveBeenCalledWith("/repo"))
+    expect(listTasks).toHaveBeenCalledWith("/repo")
     expect(screen.getByRole("treeitem", { name: "src" })).toBeTruthy()
   })
 

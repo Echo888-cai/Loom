@@ -1,6 +1,6 @@
 import { readdir, readFile, realpath, stat } from "node:fs/promises"
 import { basename, isAbsolute, join, relative, resolve, sep } from "node:path"
-import type { FileNode, ReadFileInput, ReadFileResult, WorkspaceInfo } from "../shared/contracts.js"
+import { EventRecordSchema, type FileNode, type ReadFileInput, type ReadFileResult, type TaskSummary, type WorkspaceInfo } from "../shared/contracts.js"
 
 const maximumTextFileBytes = 2 * 1024 * 1024
 const ignoredDirectoryNames = new Set([".git", "node_modules", "dist"])
@@ -126,6 +126,30 @@ export class WorkspaceService {
     }
   }
 
+  /** 历史列表只读 append-only 事件；状态由最新事件推导，绝不另建一份可漂移的任务数据库。 */
+  async listTasks(workspaceRoot: string): Promise<TaskSummary[]> {
+    const workspaceRealPath = await realpath(workspaceRoot)
+    const runsRoot = join(workspaceRealPath, ".loom", "runs")
+    let entries
+    try { entries = await readdir(runsRoot, { withFileTypes: true }) } catch (error: unknown) {
+      if (error instanceof Error && "code" in error && error.code === "ENOENT") return []
+      throw error
+    }
+    const summaries = await Promise.all(entries.filter((entry) => entry.isDirectory()).map(async (entry) => {
+      const taskId = entry.name
+      try {
+        const content = await readFile(join(runsRoot, taskId, "events.jsonl"), "utf8")
+        const events = content.split("\n").filter(Boolean).map((line) => EventRecordSchema.parse(JSON.parse(line))).sort((left, right) => left.seq - right.seq)
+        const created = events.find((event) => event.type === "task.created")
+        const goal = typeof created?.data === "object" && created.data !== null && !Array.isArray(created.data) && typeof created.data.goal === "string" ? created.data.goal : null
+        const latest = events.at(-1)
+        if (!goal || !latest || latest.taskId !== taskId) return null
+        return { taskId, goal, status: statusFromEvent(latest.type), timestamp: latest.timestamp } satisfies TaskSummary
+      } catch { return null }
+    }))
+    return summaries.filter((summary): summary is TaskSummary => summary !== null).sort((left, right) => right.timestamp.localeCompare(left.timestamp))
+  }
+
   private assertInsideWorkspace(workspaceRoot: string, targetPath: string): void {
     const pathFromRoot = relative(workspaceRoot, targetPath)
     if (pathFromRoot === "" || (pathFromRoot !== ".." && !pathFromRoot.startsWith(`..${sep}`) && !isAbsolute(pathFromRoot))) return
@@ -135,4 +159,13 @@ export class WorkspaceService {
   private shouldIgnore(name: string, relativePath: string): boolean {
     return ignoredDirectoryNames.has(name) || relativePath === join(".loom", "runs")
   }
+}
+
+function statusFromEvent(type: string): TaskSummary["status"] {
+  if (type === "task.verified") return "verified"
+  if (type === "task.blocked") return "blocked"
+  if (type === "task.failed") return "failed"
+  if (type === "task.cancelled") return "cancelled"
+  if (type === "task.candidate_done") return "candidate_done"
+  return "running"
 }

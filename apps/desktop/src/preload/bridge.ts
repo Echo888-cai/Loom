@@ -12,6 +12,7 @@ import {
   ResumeTaskInputSchema,
   StartTaskInputSchema,
   TaskCommandResultSchema,
+  TaskSummaryListSchema,
   VoidResponseSchema,
   WorkspaceRootInputSchema,
   type LoomDesktopApi,
@@ -31,6 +32,11 @@ export function createDesktopApi(ipc: IpcClient): LoomDesktopApi {
     async listWorkspace(root) {
       const input = WorkspaceRootInputSchema.parse({ workspaceRoot: root })
       return FileTreeSchema.parse(await ipc.invoke(channels.listWorkspace, input))
+    },
+
+    async listTasks(root) {
+      const input = WorkspaceRootInputSchema.parse({ workspaceRoot: root })
+      return TaskSummaryListSchema.parse(await ipc.invoke(channels.listTasks, input))
     },
 
     async readFile(input) {

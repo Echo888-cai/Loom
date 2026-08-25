@@ -7,6 +7,7 @@ import type {
   ResumeTaskInput,
   StartTaskInput,
   WorkspaceInfo,
+  TaskSummary,
 } from "../shared/contracts.js"
 import { channels } from "../shared/channels.js"
 import {
@@ -18,6 +19,7 @@ import {
   ReadFileInputSchema,
   ReadFileResultSchema,
   WorkspaceRootInputSchema,
+  TaskSummaryListSchema,
   ReplayTaskInputSchema,
   ResumeTaskInputSchema,
   StartTaskInputSchema,
@@ -33,6 +35,7 @@ export interface IpcMainAdapter {
 export interface WorkspaceOperations {
   chooseWorkspace(): Promise<WorkspaceInfo | null>
   listTree(root: string): Promise<FileNode[]>
+  listTasks(root: string): Promise<TaskSummary[]>
   readFile(input: ReadFileInput): Promise<ReadFileResult>
 }
 
@@ -59,12 +62,17 @@ export function registerWorkspaceIpcHandlers(
     return FileTreeSchema.parse(await workspace.listTree(input.workspaceRoot))
   })
 
+  ipc.handle(channels.listTasks, async (_event, rawInput) => {
+    const input = WorkspaceRootInputSchema.parse(rawInput)
+    return TaskSummaryListSchema.parse(await workspace.listTasks(input.workspaceRoot))
+  })
+
   ipc.handle(channels.readFile, async (_event, rawInput) => {
     const input = ReadFileInputSchema.parse(rawInput)
     return ReadFileResultSchema.parse(await workspace.readFile(input))
   })
 
-  const registeredChannels = [channels.chooseWorkspace, channels.listWorkspace, channels.readFile]
+  const registeredChannels = [channels.chooseWorkspace, channels.listWorkspace, channels.listTasks, channels.readFile]
   return () => {
     for (const channel of registeredChannels) ipc.removeHandler(channel)
   }
