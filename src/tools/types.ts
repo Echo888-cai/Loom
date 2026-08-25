@@ -1,6 +1,7 @@
 // Tool 模块依赖模型能理解的 schema，但不依赖具体的 DeepSeek Provider。
 import type { ToolSchema } from "../model/types.js"
 import type { z } from "zod"
+import type { EventStore } from "../events/types.js"
 
 /**
  * 每次工具调用拿到的运行时上下文。
@@ -13,6 +14,7 @@ export interface ToolContext {
   signal: AbortSignal
   maxOutputChars: number
   rawDir: string
+  eventStore?: EventStore
 }
 
 /**

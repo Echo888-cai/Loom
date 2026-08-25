@@ -5,7 +5,7 @@ describe("DefaultToolRegistry", () => {
   it("exposes read_file and search schemas", () => {
     const registry = new DefaultToolRegistry()
 
-    expect(registry.schemas().map((schema) => schema.function.name)).toEqual(["read_file", "search"])
+    expect(registry.schemas().map((schema) => schema.function.name)).toEqual(["read_file", "search", "edit_file"])
   })
 
   it("rejects an unknown tool name", async () => {

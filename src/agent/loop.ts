@@ -112,7 +112,7 @@ export class AgentLoop {
   private async executeTool(request: RunRequest, rawDir: string, name: string, argumentsJson: string) {
     try {
       const input: unknown = JSON.parse(argumentsJson)
-      return await this.tools.execute(name, { workspaceRoot: request.workspaceRoot, taskId: request.taskId, signal: request.signal ?? new AbortController().signal, maxOutputChars: this.limits.maxToolOutputChars ?? 12_000, rawDir }, input)
+        return await this.tools.execute(name, { workspaceRoot: request.workspaceRoot, taskId: request.taskId, signal: request.signal ?? new AbortController().signal, maxOutputChars: this.limits.maxToolOutputChars ?? 12_000, rawDir, eventStore: this.events }, input)
     } catch (error: unknown) {
       return { ok: false, content: `Tool execution failed: ${errorMessage(error)}` }
     }
