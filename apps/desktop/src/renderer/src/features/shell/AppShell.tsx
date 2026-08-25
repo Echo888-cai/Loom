@@ -8,6 +8,7 @@ import { CodeWorkspace } from "../code/CodeWorkspace.js"
 import { EditorTabs } from "../code/EditorTabs.js"
 import { WorkspaceHeader } from "./WorkspaceHeader.js"
 import { useTaskStore } from "../../state/task-store.js"
+import { AgentConsole } from "../agent/AgentConsole.js"
 
 const minimumConsoleWidth = 320
 const maximumConsoleWidth = 520
@@ -25,6 +26,8 @@ export function AppShell() {
   const openFile = useTaskStore((state) => state.openFile)
   const closeFile = useTaskStore((state) => state.closeFile)
   const setWorkspace = useTaskStore((state) => state.setWorkspace)
+  const activeTaskId = useTaskStore((state) => state.activeTaskId)
+  const eventsByTask = useTaskStore((state) => state.eventsByTask)
 
   useEffect(() => {
     const onResize = () => setWindowIsTooNarrow(window.innerWidth < 760)
@@ -43,7 +46,7 @@ export function AppShell() {
     const nextTree = await window.loom.listWorkspace(selected.root)
     setWorkspace(selected, nextTree)
   }
-  return <div className="app-shell"><WorkspaceHeader workspaceName={workspace?.name} onOpenWorkspace={() => { void openWorkspace() }} /><div className="workbench" style={{ "--agent-width": `${agentWidth}px` } as CSSProperties}><Explorer nodes={tree} onOpenFile={openFile} /><main className="code-workspace" aria-label="Code workspace"><EditorTabs paths={openTabs} activePath={activePath} onSelect={openFile} onClose={closeFile} /><CodeWorkspace workspaceRoot={workspace?.root ?? null} activePath={activePath} diff={activePath ? diffs[activePath] : undefined} /></main>{consoleCollapsed ? <div className="restore-console"><IconButton label="Restore Agent Console" onClick={restoreConsole} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") restoreConsole() }}><SidebarSimple size={17} aria-hidden="true" /></IconButton></div> : <><PanelDivider value={agentWidth} onChange={resize} /><aside className="agent-console" aria-label="Agent Console" style={{ width: `${agentWidth}px` }}><div className="console-toolbar"><span className="console-title">Agent Console</span><IconButton label="Collapse Agent Console" onClick={() => setConsoleCollapsed(true)}><SidebarSimple size={17} aria-hidden="true" /></IconButton></div><div className="console-empty"><p>Run a task to see Loom’s process here.</p></div></aside></>}</div></div>
+  return <div className="app-shell"><WorkspaceHeader workspaceName={workspace?.name} onOpenWorkspace={() => { void openWorkspace() }} /><div className="workbench" style={{ "--agent-width": `${agentWidth}px` } as CSSProperties}><Explorer nodes={tree} onOpenFile={openFile} /><main className="code-workspace" aria-label="Code workspace"><EditorTabs paths={openTabs} activePath={activePath} onSelect={openFile} onClose={closeFile} /><CodeWorkspace workspaceRoot={workspace?.root ?? null} activePath={activePath} diff={activePath ? diffs[activePath] : undefined} /></main>{consoleCollapsed ? <div className="restore-console"><IconButton label="Restore Agent Console" onClick={restoreConsole} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") restoreConsole() }}><SidebarSimple size={17} aria-hidden="true" /></IconButton></div> : <><PanelDivider value={agentWidth} onChange={resize} /><aside className="agent-console" aria-label="Agent Console" style={{ width: `${agentWidth}px` }}><div className="console-toolbar"><span className="console-title">Agent Console</span><IconButton label="Collapse Agent Console" onClick={() => setConsoleCollapsed(true)}><SidebarSimple size={17} aria-hidden="true" /></IconButton></div><AgentConsole taskId={activeTaskId ?? undefined} events={activeTaskId ? eventsByTask[activeTaskId] ?? [] : []} /></aside></>}</div></div>
 }
 
 function readSavedWidth(): number {

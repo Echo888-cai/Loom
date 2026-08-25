@@ -42,6 +42,21 @@ button:focus-visible, [role="separator"]:focus-visible { outline: 2px solid var(
 .console-title { font-size: 12px; font-weight: 650; letter-spacing: -.01em; }
 .console-empty { padding: 20px 14px; color: var(--text-secondary); }
 .console-empty p { margin: 0; }
+.agent-content { padding: 12px; }
+.reasoning { margin: 0 0 12px; padding: 10px; overflow: auto; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface-subtle); color: var(--text-primary); font: 12px/1.55 var(--font-code); white-space: pre-wrap; }
+.thinking { display: flex; align-items: center; gap: 8px; padding: 4px 2px 12px; color: var(--text-secondary); }
+.thinking-mark { width: 10px; height: 10px; border: 1.5px solid var(--accent); border-top-color: transparent; border-radius: 50%; animation: loom-spin 900ms linear infinite; }
+.agent-section { margin: 0 0 18px; }
+.agent-section h2 { margin: 0 0 6px; color: var(--text-muted); font-size: 10px; font-weight: 650; letter-spacing: .07em; text-transform: uppercase; }
+.agent-row { display: grid; gap: 3px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.agent-row strong { font-size: 12px; font-weight: 600; }
+.agent-row span { color: var(--text-secondary); font-size: 12px; }
+.approval-surface { display: grid; gap: 6px; margin-top: 14px; padding: 10px; border: 1px solid #ebcf9d; border-radius: var(--radius-sm); background: #fff8ec; color: var(--text-primary); }
+.approval-surface span, .approval-surface small { color: var(--text-secondary); }
+.approval-surface div { display: flex; gap: 6px; margin-top: 2px; }
+.approval-surface button { min-height: 28px; padding: 0 8px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); color: var(--text-primary); }
+.approval-surface button:last-child { border-color: var(--accent); background: var(--accent); color: white; }
+@keyframes loom-spin { to { transform: rotate(360deg); } }
 .restore-console { display: grid; width: 36px; place-items: start center; padding-top: 8px; background: var(--surface); border-left: 1px solid var(--line); }
 .minimum-window { display: grid; min-height: 100dvh; place-items: center; padding: 28px; text-align: center; }
 .minimum-window section { max-width: 320px; }
