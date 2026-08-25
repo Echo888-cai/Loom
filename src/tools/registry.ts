@@ -4,6 +4,7 @@ import { createReadFileTool } from "./read-file.js"
 import { createSearchTool } from "./search.js"
 import { createEditFileTool } from "./edit-file.js"
 import { createShellTool } from "./shell.js"
+import { createFinishTaskTool } from "./finish-task.js"
 import type { ToolContext, ToolDefinition, ToolResult } from "./types.js"
 
 export class DefaultToolRegistry {
@@ -12,7 +13,7 @@ export class DefaultToolRegistry {
    * 创建工具注册表。
    * 四问：输入是可选工具集合；构造无外部副作用；重复名字等配置问题目前由调用方负责；registry 测试验证默认集合。
    */
-  constructor(tools: ToolDefinition<unknown>[] = [createReadFileTool(), createSearchTool(), createEditFileTool(), createShellTool()] as ToolDefinition<unknown>[]) { this.tools = tools }
+  constructor(tools: ToolDefinition<unknown>[] = [createReadFileTool(), createSearchTool(), createEditFileTool(), createShellTool(), createFinishTaskTool()] as ToolDefinition<unknown>[]) { this.tools = tools }
   /**
    * 返回给模型看的工具 schemas。
    * 四问：输入是注册表内部工具；无外部副作用；不会执行工具；registry 测试验证名称。

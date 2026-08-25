@@ -36,6 +36,11 @@ class FakeRegistry implements ToolRegistry {
   }
 }
 
+class FinishRegistry implements ToolRegistry {
+  schemas() { return [{ type: "function" as const, function: { name: "finish_task", description: "fake", parameters: { type: "object" } } }] }
+  async execute() { return { ok: true, content: "Verification passed", metadata: { verificationStatus: "verified" } } }
+}
+
 describe("AgentLoop", () => {
   it("feeds assistant tool calls and tool results into the next model request", async () => {
     const provider = new FakeProvider([
@@ -68,5 +73,14 @@ describe("AgentLoop", () => {
 
     expect(result).toMatchObject({ status: "blocked", modelCalls: 1 })
     expect(store.events.at(-1)?.type).toBe("task.blocked")
+  })
+
+  it("returns verified only when finish_task reports verification success", async () => {
+    const provider = new FakeProvider([{ content: null, toolCalls: [{ id: "finish-1", name: "finish_task", argumentsJson: "{}" }] }])
+    const store = new MemoryEventStore()
+
+    const result = await new AgentLoop(provider, new FinishRegistry(), store, { maxModelCalls: 2, maxToolCalls: 2, maxDurationMs: 10_000 }).run({ taskId: "task-3", goal: "finish", workspaceRoot: "/tmp/repo" })
+
+    expect(result).toMatchObject({ status: "verified", modelCalls: 1, toolCalls: 1 })
   })
 })

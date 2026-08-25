@@ -4,6 +4,7 @@ import type { z } from "zod"
 import type { EventStore } from "../events/types.js"
 import type { ApprovalGate } from "../safety/approval.js"
 import type { CommandRunner } from "../process/runner.js"
+import type { Verifier } from "../verification/types.js"
 
 /**
  * 每次工具调用拿到的运行时上下文。
@@ -19,6 +20,7 @@ export interface ToolContext {
   eventStore?: EventStore
   approvalGate?: ApprovalGate
   commandRunner?: CommandRunner
+  verifier?: Verifier
 }
 
 /**

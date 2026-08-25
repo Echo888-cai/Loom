@@ -5,6 +5,7 @@ import type { ContextCompiler } from "../context/compiler.js"
 import { FullHistoryCompiler } from "../context/compiler.js"
 import type { ModelMessage, ModelProvider } from "../model/types.js"
 import type { ToolRegistry } from "../tools/types.js"
+import type { Verifier } from "../verification/types.js"
 import { getLimitReason, type AgentLimits, type LimitState } from "./limits.js"
 
 /** 一次任务运行的输入。 */
@@ -49,6 +50,7 @@ export class AgentLoop {
     private readonly events: EventStore,
     private readonly limits: AgentLimits = defaultLimits,
     private readonly compiler: ContextCompiler = new FullHistoryCompiler(),
+    private readonly verifier?: Verifier,
   ) {}
 
   /**
@@ -101,6 +103,12 @@ export class AgentLoop {
         const result = await this.executeTool(request, rawDir, call.name, call.argumentsJson)
         await this.events.append(request.taskId, "tool.completed", { call: state.toolCalls, id: call.id, name: call.name, ...result })
         messages.push({ role: "tool", toolCallId: call.id, content: result.content })
+        if (call.name === "finish_task") {
+          const verificationStatus = result.metadata?.verificationStatus
+          if (verificationStatus === "verified") return { taskId: request.taskId, status: "verified", steps: state.modelCalls, modelCalls: state.modelCalls, toolCalls: state.toolCalls }
+          if (verificationStatus === "blocked") return { taskId: request.taskId, status: "blocked", steps: state.modelCalls, modelCalls: state.modelCalls, toolCalls: state.toolCalls }
+          // continue 表示模型必须阅读验证证据，在下一轮继续修复。
+        }
       }
     }
   }
@@ -112,7 +120,7 @@ export class AgentLoop {
   private async executeTool(request: RunRequest, rawDir: string, name: string, argumentsJson: string) {
     try {
       const input: unknown = JSON.parse(argumentsJson)
-        return await this.tools.execute(name, { workspaceRoot: request.workspaceRoot, taskId: request.taskId, signal: request.signal ?? new AbortController().signal, maxOutputChars: this.limits.maxToolOutputChars ?? 12_000, rawDir, eventStore: this.events }, input)
+        return await this.tools.execute(name, { workspaceRoot: request.workspaceRoot, taskId: request.taskId, signal: request.signal ?? new AbortController().signal, maxOutputChars: this.limits.maxToolOutputChars ?? 12_000, rawDir, eventStore: this.events, ...(this.verifier ? { verifier: this.verifier } : {}) }, input)
     } catch (error: unknown) {
       return { ok: false, content: `Tool execution failed: ${errorMessage(error)}` }
     }
