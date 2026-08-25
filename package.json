@@ -1,0 +1,27 @@
+{
+  "name": "loom",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "loom": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "diff": "^7.0.0",
+    "execa": "^9.0.0",
+    "openai": "^5.0.0",
+    "zod": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^3.0.0"
+  }
+}
