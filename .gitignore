@@ -2,6 +2,8 @@
 node_modules/
 dist/
 apps/desktop/out/
+apps/desktop/release/
+apps/desktop/test-results/
 *.tsbuildinfo
 .loom/runs/
 .superpowers/
