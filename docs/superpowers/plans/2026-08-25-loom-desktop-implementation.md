@@ -195,14 +195,16 @@ git commit -m "feat(desktop): add secure Electron shell"
 - Create: `apps/desktop/src/shared/contracts.ts`
 - Create: `apps/desktop/src/main/workspace-service.ts`
 - Create: `apps/desktop/src/main/ipc.ts`
+- Create: `apps/desktop/src/preload/bridge.ts`
 - Modify: `apps/desktop/src/main/index.ts`
 - Modify: `apps/desktop/src/preload/index.ts`
 - Modify: `apps/desktop/src/preload/global.d.ts`
 - Test: `apps/desktop/tests/main/contracts.test.ts`
+- Test: `apps/desktop/tests/main/ipc.test.ts`
 - Test: `apps/desktop/tests/main/workspace-service.test.ts`
 - Test: `apps/desktop/tests/preload/bridge.test.ts`
 
-- [ ] **Step 1: Write failing contract and path-policy tests**
+- [x] **Step 1: Write failing contract and path-policy tests**
 
 Cover these exact cases:
 
@@ -215,7 +217,7 @@ expect(EventEnvelopeSchema.parse(validPersistedEvent)).toEqual(validPersistedEve
 
 Create a temporary workspace and assert `WorkspaceService.readFile()` accepts a file inside it but rejects `../outside.txt` and a symlink that resolves outside the workspace.
 
-- [ ] **Step 2: Implement shared Zod contracts and channel constants**
+- [x] **Step 2: Implement shared Zod contracts and channel constants**
 
 Define these renderer-facing types from Zod schemas:
 
@@ -233,7 +235,7 @@ type TaskEventEnvelope = { taskId: string; event: EventRecord }
 
 Use explicit constants for invoke channels and the single task-event channel. Do not export raw Electron channel access.
 
-- [ ] **Step 3: Implement safe workspace reads**
+- [x] **Step 3: Implement safe workspace reads**
 
 `WorkspaceService` provides:
 
@@ -245,7 +247,7 @@ readFile(input: ReadFileInput): Promise<{ relativePath: string; content: string 
 
 Resolve and realpath both workspace and target, require the target to stay under the real workspace root, ignore `.git`, `node_modules`, `dist`, `.loom/runs`, and cap tree traversal at 10,000 nodes. Reject binary files and files larger than 2 MiB with a typed message the renderer can display.
 
-- [ ] **Step 4: Implement the narrow preload API**
+- [x] **Step 4: Implement the narrow preload API**
 
 Expose exactly this surface through `contextBridge.exposeInMainWorld("loom", api)`:
 
@@ -265,13 +267,13 @@ interface LoomDesktopApi {
 
 Every invoke input is parsed in preload and parsed again in main. Every response is parsed before returning to the renderer. The bridge test must assert that no `send`, `invoke`, `on`, `ipcRenderer`, environment object, or API-key value is exposed.
 
-- [ ] **Step 5: Register main handlers and verify the boundary**
+- [x] **Step 5: Register main handlers and verify the boundary**
 
-Run: `pnpm --filter loom-desktop test -- contracts.test.ts workspace-service.test.ts bridge.test.ts`
+Run: `pnpm --dir apps/desktop exec vitest run tests/main/contracts.test.ts tests/main/ipc.test.ts tests/main/workspace-service.test.ts tests/preload/bridge.test.ts`
 
 Expected: malformed payloads, traversal, escaping symlinks, and unlisted bridge methods are rejected; valid file reads pass.
 
-- [ ] **Step 6: Commit the IPC milestone**
+- [x] **Step 6: Commit the IPC milestone**
 
 ```bash
 git add apps/desktop/src apps/desktop/tests
