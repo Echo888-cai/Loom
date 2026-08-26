@@ -19,3 +19,36 @@ export class FullHistoryCompiler implements ContextCompiler {
     return [...input.messages]
   }
 }
+
+export type ContextCompilerOptions = { maxTokens: number }
+
+/**
+ * v0.1 的可解释预算策略：保留 system/goal，再从最新消息向前填充。
+ * 这里用字符数近似 token（约 4 个字符≈1 token），目的是先建立稳定策略；
+ * 真正 tokenizer 可以在后续替换，不影响 AgentLoop 的接口。
+ */
+export class BudgetedContextCompiler implements ContextCompiler {
+  constructor(private readonly options: ContextCompilerOptions) {}
+
+  compile(input: { goal: string; messages: ModelMessage[] }): ModelMessage[] {
+    const [system, currentGoal] = input.messages
+    const pinned = [system, currentGoal].filter((message): message is ModelMessage => message !== undefined)
+    const remaining = input.messages.slice(pinned.length).reverse()
+    let used = pinned.reduce((sum, message) => sum + estimateTokens(message), 0)
+    const selected: ModelMessage[] = []
+
+    for (const message of remaining) {
+      const cost = estimateTokens(message)
+      if (used + cost > this.options.maxTokens) continue
+      selected.push(message)
+      used += cost
+    }
+
+    return [...pinned, ...selected.reverse()]
+  }
+}
+
+function estimateTokens(message: ModelMessage): number {
+  const content = message.content ?? ""
+  return Math.max(1, Math.ceil(content.length / 4))
+}

@@ -2,7 +2,7 @@
 import { join } from "node:path"
 import type { EventStore } from "../events/types.js"
 import type { ContextCompiler } from "../context/compiler.js"
-import { FullHistoryCompiler } from "../context/compiler.js"
+import { BudgetedContextCompiler } from "../context/compiler.js"
 import type { ModelMessage, ModelProvider } from "../model/types.js"
 import type { ToolRegistry } from "../tools/types.js"
 import type { Verifier } from "../verification/types.js"
@@ -51,7 +51,7 @@ export class AgentLoop {
     private readonly tools: ToolRegistry,
     private readonly events: EventStore,
     private readonly limits: AgentLimits = defaultLimits,
-    private readonly compiler: ContextCompiler = new FullHistoryCompiler(),
+    private readonly compiler: ContextCompiler = new BudgetedContextCompiler({ maxTokens: 12_000 }),
     private readonly verifier?: Verifier,
     private readonly approvalGate?: ApprovalGate,
     private readonly commandRunner?: CommandRunner,
