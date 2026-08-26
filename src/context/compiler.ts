@@ -33,18 +33,26 @@ export class BudgetedContextCompiler implements ContextCompiler {
   compile(input: { goal: string; messages: ModelMessage[] }): ModelMessage[] {
     const [system, currentGoal] = input.messages
     const pinned = [system, currentGoal].filter((message): message is ModelMessage => message !== undefined)
-    const remaining = input.messages.slice(pinned.length).reverse()
+    const units: ModelMessage[][] = []
+    for (let index = pinned.length; index < input.messages.length; index += 1) {
+      const message = input.messages[index]
+      const unit = [message]
+      if (message.role === "assistant" && message.toolCalls?.length) {
+        while (input.messages[index + 1]?.role === "tool") unit.push(input.messages[++index])
+      }
+      units.push(unit)
+    }
     let used = pinned.reduce((sum, message) => sum + estimateTokens(message), 0)
-    const selected: ModelMessage[] = []
+    const selected: ModelMessage[][] = []
 
-    for (const message of remaining) {
-      const cost = estimateTokens(message)
+    for (const unit of units.reverse()) {
+      const cost = unit.reduce((sum, message) => sum + estimateTokens(message), 0)
       if (used + cost > this.options.maxTokens) continue
-      selected.push(message)
+      selected.push(unit)
       used += cost
     }
 
-    return [...pinned, ...selected.reverse()]
+    return [...pinned, ...selected.reverse().flat()]
   }
 }
 

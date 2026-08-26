@@ -45,4 +45,19 @@ describe("BudgetedContextCompiler", () => {
       messages[3],
     ])
   })
+
+  it("keeps an assistant tool call together with its tool result", () => {
+    const messages: ModelMessage[] = [
+      { role: "system", content: "system" },
+      { role: "user", content: "goal" },
+      { role: "assistant", content: null, toolCalls: [{ id: "call-1", name: "read_file", argumentsJson: "{}" }] },
+      { role: "tool", toolCallId: "call-1", content: "file content" },
+      { role: "assistant", content: "old conclusion that is no longer useful" },
+    ]
+
+    const result = new BudgetedContextCompiler({ maxTokens: 7 }).compile({ goal: "goal", messages })
+
+    expect(result).toContainEqual(messages[2])
+    expect(result).toContainEqual(messages[3])
+  })
 })
