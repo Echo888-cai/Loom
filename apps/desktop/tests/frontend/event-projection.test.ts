@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { projectAgentConsole } from "../../src/renderer/src/state/event-projection.js"
+import { projectAgentConsole } from "../../src/frontend/src/state/event-projection.js"
 
 describe("projectAgentConsole", () => {
   it("derives reasoning, completed work, verification evidence, and verified state from durable events", () => {

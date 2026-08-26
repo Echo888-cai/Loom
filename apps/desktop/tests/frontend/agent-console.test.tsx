@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
-import { AgentConsole } from "../../src/renderer/src/features/agent/AgentConsole.js"
+import { AgentConsole } from "../../src/frontend/src/features/agent/AgentConsole.js"
 
 afterEach(cleanup)
 

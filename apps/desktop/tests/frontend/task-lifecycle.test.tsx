@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { NewTaskComposer } from "../../src/renderer/src/features/task/NewTaskComposer.js"
-import { TaskControls } from "../../src/renderer/src/features/task/TaskControls.js"
-import { subscribeToTaskEvents } from "../../src/renderer/src/App.js"
+import { NewTaskComposer } from "../../src/frontend/src/features/task/NewTaskComposer.js"
+import { TaskControls } from "../../src/frontend/src/features/task/TaskControls.js"
+import { subscribeToTaskEvents } from "../../src/frontend/src/App.js"
 
 afterEach(cleanup)
 

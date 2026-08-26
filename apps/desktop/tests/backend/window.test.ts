@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { createDesktopPaths, createMainWindow, createWindowOptions, type WindowAdapter } from "../../src/main/window.js"
+import { createDesktopPaths, createMainWindow, createWindowOptions, type WindowAdapter } from "../../src/backend/window.js"
 
 describe("createWindowOptions", () => {
   it("keeps privileged Node APIs outside the renderer", () => {

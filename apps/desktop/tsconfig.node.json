@@ -13,10 +13,10 @@
   },
   "include": [
     "electron.vite.config.ts",
-    "src/main/**/*.ts",
-    "src/preload/**/*.ts",
+    "src/backend/**/*.ts",
+    "src/bridge/**/*.ts",
     "src/shared/**/*.ts",
-    "tests/main/**/*.ts",
-    "tests/preload/**/*.ts"
+    "tests/backend/**/*.ts",
+    "tests/bridge/**/*.ts"
   ]
 }

@@ -2,7 +2,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import type { FileNode } from "../../src/shared/contracts.js"
-import { FileTree } from "../../src/renderer/src/features/explorer/FileTree.js"
+import { FileTree } from "../../src/frontend/src/features/explorer/FileTree.js"
 
 const tree: FileNode[] = [{ name: "src", relativePath: "src", kind: "directory", children: [{ name: "auth.ts", relativePath: "src/auth.ts", kind: "file" }] }]
 

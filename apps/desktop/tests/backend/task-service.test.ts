@@ -3,7 +3,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { describe, expect, it } from "vitest"
 import type { ApprovalGate, EventStore, RunResult, RuntimeRunOptions } from "loom"
-import { TaskService, type TaskRuntime } from "../../src/main/task-service.js"
+import { TaskService, type TaskRuntime } from "../../src/backend/task-service.js"
 import { channels } from "../../src/shared/channels.js"
 
 class FakeWindow {

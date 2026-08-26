@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { TaskList } from "../../src/renderer/src/features/explorer/TaskList.js"
+import { TaskList } from "../../src/frontend/src/features/explorer/TaskList.js"
 
 afterEach(cleanup)
 

@@ -3,8 +3,8 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { ZodError } from "zod"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
-import { registerTaskIpcHandlers, registerWorkspaceIpcHandlers, type IpcMainAdapter } from "../../src/main/ipc.js"
-import { WorkspaceService } from "../../src/main/workspace-service.js"
+import { registerTaskIpcHandlers, registerWorkspaceIpcHandlers, type IpcMainAdapter } from "../../src/backend/ipc.js"
+import { WorkspaceService } from "../../src/backend/workspace-service.js"
 import { channels } from "../../src/shared/channels.js"
 
 describe("workspace IPC handlers", () => {

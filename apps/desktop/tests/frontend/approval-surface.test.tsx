@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { ApprovalSurface } from "../../src/renderer/src/features/agent/ApprovalSurface.js"
+import { ApprovalSurface } from "../../src/frontend/src/features/agent/ApprovalSurface.js"
 
 afterEach(cleanup)
 

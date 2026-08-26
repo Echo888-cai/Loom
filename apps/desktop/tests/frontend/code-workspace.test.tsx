@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen, waitFor } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { CodeWorkspace } from "../../src/renderer/src/features/code/CodeWorkspace.js"
+import { CodeWorkspace } from "../../src/frontend/src/features/code/CodeWorkspace.js"
 
 vi.mock("@monaco-editor/react", () => ({
   default: (props: Record<string, unknown>) => <pre data-testid="editor">{JSON.stringify({ value: props.value, options: props.options })}</pre>,

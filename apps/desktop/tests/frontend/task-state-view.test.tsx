@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
-import { TaskStateView } from "../../src/renderer/src/features/task/TaskStateView.js"
+import { TaskStateView } from "../../src/frontend/src/features/task/TaskStateView.js"
 
 afterEach(cleanup)
 

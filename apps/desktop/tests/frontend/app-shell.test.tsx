@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { AppShell } from "../../src/renderer/src/features/shell/AppShell.js"
+import { AppShell } from "../../src/frontend/src/features/shell/AppShell.js"
 
 beforeEach(() => {
   cleanup()

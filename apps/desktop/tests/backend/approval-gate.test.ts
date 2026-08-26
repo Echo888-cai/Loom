@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { DesktopApprovalGate } from "../../src/main/approval-gate.js"
+import { DesktopApprovalGate } from "../../src/backend/approval-gate.js"
 
 const request = { command: "pnpm test", cwd: "/repo", timeoutMs: 120_000, reason: "Verify the fix" }
 

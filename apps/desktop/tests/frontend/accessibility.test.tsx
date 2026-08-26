@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
-import { App } from "../../src/renderer/src/App.js"
+import { App } from "../../src/frontend/src/App.js"
 
 describe("Loom workbench accessibility", () => {
   it("gives icon controls names and omits noisy editor-status copy", () => {

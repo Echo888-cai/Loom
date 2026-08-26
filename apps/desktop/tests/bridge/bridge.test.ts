@@ -1,7 +1,7 @@
 import { ZodError } from "zod"
 import { describe, expect, it } from "vitest"
 import { channels } from "../../src/shared/channels.js"
-import { createDesktopApi, type IpcClient } from "../../src/preload/bridge.js"
+import { createDesktopApi, type IpcClient } from "../../src/bridge/bridge.js"
 
 describe("Loom preload bridge", () => {
   it("exposes only the allowlisted product API", () => {
