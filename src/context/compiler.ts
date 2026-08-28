@@ -36,9 +36,14 @@ export class BudgetedContextCompiler implements ContextCompiler {
     const units: ModelMessage[][] = []
     for (let index = pinned.length; index < input.messages.length; index += 1) {
       const message = input.messages[index]
+      if (!message) continue
       const unit = [message]
       if (message.role === "assistant" && message.toolCalls?.length) {
-        while (input.messages[index + 1]?.role === "tool") unit.push(input.messages[++index])
+        while (input.messages[index + 1]?.role === "tool") {
+          index += 1
+          const toolMessage = input.messages[index]
+          if (toolMessage) unit.push(toolMessage)
+        }
       }
       units.push(unit)
     }
@@ -58,5 +63,9 @@ export class BudgetedContextCompiler implements ContextCompiler {
 
 function estimateTokens(message: ModelMessage): number {
   const content = message.content ?? ""
-  return Math.max(1, Math.ceil(content.length / 4))
+  const reasoning = message.role === "assistant" ? message.reasoningContent ?? "" : ""
+  const toolArguments = message.role === "assistant"
+    ? (message.toolCalls ?? []).map((call) => `${call.name}${call.argumentsJson}`).join("")
+    : ""
+  return Math.max(1, Math.ceil((content.length + reasoning.length + toolArguments.length) / 4))
 }
