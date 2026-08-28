@@ -17,6 +17,10 @@ export function buildContextObjects(events: EventRecord[]): ContextObject[] {
       const relatedTo = objects.filter((object) => object.sourceKey === sourceKey && object.relatedTo?.length).flatMap((object) => object.relatedTo ?? [])
       objects.push({ id: `file-${event.seq}`, kind: "diff", content: `changed: ${data.path}`, state: "active", importance: 0.9, relevance: 0.9, freshness: 1, sourceKey, relatedTo })
     }
+    if (event.type === "verification.completed" && typeof data.name === "string") {
+      const output = typeof data.output === "string" ? data.output : ""
+      objects.push({ id: `verification-${event.seq}`, kind: "test", content: `${data.name}\n${output}`, state: "active", importance: data.passed === true ? 0.8 : 1, relevance: 1, freshness: 1, sourceKey: `test:${data.name}` })
+    }
   }
   return objects
 }

@@ -28,4 +28,14 @@ describe("Context object builder", () => {
 
     expect(result.find((object) => object.id === "file-2")?.relatedTo).toEqual(["tool:call-1"])
   })
+
+  it("turns verification evidence into an active test context object", () => {
+    const events: EventRecord[] = [
+      { seq: 3, timestamp: "3", taskId: "t", type: "verification.completed", data: { name: "auth tests", passed: false, output: "401" } },
+    ]
+
+    const [object] = buildContextObjects(events)
+
+    expect(object).toMatchObject({ kind: "test", state: "active", sourceKey: "test:auth tests", content: expect.stringContaining("401") })
+  })
 })
