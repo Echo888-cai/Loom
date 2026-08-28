@@ -15,5 +15,17 @@ describe("Context object builder", () => {
     expect(result.find((object) => object.id === "file-2")?.state).toBe("active")
     expect(result.find((object) => object.id === "tool-1")?.sourceKey).toBe("file:src/auth.ts")
     expect(result.find((object) => object.id === "file-2")?.sourceKey).toBe("file:src/auth.ts")
+    expect(result.find((object) => object.id === "tool-1")?.relatedTo).toEqual([])
+  })
+
+  it("links a changed file fact back to the tool call that produced it", () => {
+    const events: EventRecord[] = [
+      { seq: 1, timestamp: "1", taskId: "t", type: "tool.completed", data: { id: "call-1", name: "read_file", path: "src/auth.ts", content: "old" } },
+      { seq: 2, timestamp: "2", taskId: "t", type: "file.changed", data: { path: "src/auth.ts" } },
+    ]
+
+    const result = buildContextObjects(events)
+
+    expect(result.find((object) => object.id === "file-2")?.relatedTo).toEqual(["tool:call-1"])
   })
 })
