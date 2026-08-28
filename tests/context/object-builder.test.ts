@@ -13,5 +13,7 @@ describe("Context object builder", () => {
 
     expect(result.find((object) => object.id === "tool-1")?.state).toBe("obsolete")
     expect(result.find((object) => object.id === "file-2")?.state).toBe("active")
+    expect(result.find((object) => object.id === "tool-1")?.sourceKey).toBe("file:src/auth.ts")
+    expect(result.find((object) => object.id === "file-2")?.sourceKey).toBe("file:src/auth.ts")
   })
 })

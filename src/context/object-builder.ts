@@ -7,11 +7,13 @@ export function buildContextObjects(events: EventRecord[]): ContextObject[] {
   for (const event of events) {
     const data = asRecord(event.data)
     if (event.type === "tool.completed" && data.name === "read_file" && typeof data.content === "string") {
-      objects.push({ id: `tool-${event.seq}`, kind: "code", content: `${String(data.path ?? "file")}\n${data.content}`, state: "active", importance: 0.8, relevance: 0.8, freshness: 1, ...(typeof data.id === "string" ? { sourceKey: `tool:${data.id}` } : {}) })
+      const path = String(data.path ?? "file")
+      objects.push({ id: `tool-${event.seq}`, kind: "code", content: `${path}\n${data.content}`, state: "active", importance: 0.8, relevance: 0.8, freshness: 1, sourceKey: `file:${path}`, ...(typeof data.id === "string" ? { sourceKey: `file:${path}` } : {}) })
     }
     if (event.type === "file.changed" && typeof data.path === "string") {
-      for (const object of objects) if (object.kind === "code" && object.content.startsWith(`${data.path}\n`)) object.state = "obsolete"
-      objects.push({ id: `file-${event.seq}`, kind: "diff", content: `changed: ${data.path}`, state: "active", importance: 0.9, relevance: 0.9, freshness: 1 })
+      const sourceKey = `file:${data.path}`
+      for (const object of objects) if (object.sourceKey === sourceKey) object.state = "obsolete"
+      objects.push({ id: `file-${event.seq}`, kind: "diff", content: `changed: ${data.path}`, state: "active", importance: 0.9, relevance: 0.9, freshness: 1, sourceKey })
     }
   }
   return objects
