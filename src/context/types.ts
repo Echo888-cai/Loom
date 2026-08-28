@@ -8,6 +8,7 @@ export type ContextObject = {
   relevance: number
   freshness: number
   message?: import("../model/types.js").ModelMessage
+  sourceKey?: string
 }
 
 /** 生命周期过滤：过时事实隐藏，已解决事实降级为摘要，当前事实原样保留。 */

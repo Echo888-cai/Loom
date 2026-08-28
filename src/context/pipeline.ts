@@ -25,8 +25,8 @@ export class ContextPipeline {
   }
 
   compileCombined(events: EventRecord[], messages: ModelMessage[]): ModelMessage[] {
-    const messageContents = messages.map((message) => message.content ?? "")
-    const eventObjects = buildContextObjects(events).filter((object) => !messageContents.some((content) => content && object.content.includes(content)))
+    const messageSourceKeys = new Set(buildMessageContextObjects(messages).flatMap((object) => object.sourceKey ? [object.sourceKey] : []))
+    const eventObjects = buildContextObjects(events).filter((object) => !object.sourceKey || !messageSourceKeys.has(object.sourceKey))
     const objects = [...eventObjects, ...buildMessageContextObjects(messages)]
     return contextObjectsToMessages(this.compiler.compile(objects))
   }

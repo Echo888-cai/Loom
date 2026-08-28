@@ -12,5 +12,6 @@ export function buildMessageContextObjects(messages: ModelMessage[]): ContextObj
     relevance: 1,
     freshness: 1,
     message,
+    ...(message.role === "tool" ? { sourceKey: `tool:${message.toolCallId}` } : {}),
   }))
 }
