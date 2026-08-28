@@ -31,11 +31,11 @@ describe("Context object builder", () => {
 
   it("turns verification evidence into an active test context object", () => {
     const events: EventRecord[] = [
-      { seq: 3, timestamp: "3", taskId: "t", type: "verification.completed", data: { name: "auth tests", passed: false, output: "401" } },
+      { seq: 3, timestamp: "3", taskId: "t", type: "verification.completed", data: { name: "auth tests", passed: false, output: "401", filesChanged: ["src/auth.ts"] } },
     ]
 
     const [object] = buildContextObjects(events)
 
-    expect(object).toMatchObject({ kind: "test", state: "active", sourceKey: "test:auth tests", content: expect.stringContaining("401") })
+    expect(object).toMatchObject({ kind: "test", state: "active", sourceKey: "test:auth tests", relatedTo: ["file:src/auth.ts"], content: expect.stringContaining("401") })
   })
 })

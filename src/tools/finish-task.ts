@@ -26,7 +26,7 @@ export function createFinishTaskTool(): ToolDefinition<FinishTaskInput> {
       }
       const verification = await context.verifier.verify({ taskId: context.taskId, workspaceRoot: context.workspaceRoot, filesChanged: input.filesChanged, constraints: input.remainingRisks })
       const eventType = verification.status === "verified" ? "task.verified" : verification.status === "blocked" ? "task.blocked" : "task.verification_continue"
-      await context.eventStore?.append(context.taskId, eventType, { summary: input.summary, verificationClaim: input.verificationClaim, ...verification })
+      await context.eventStore?.append(context.taskId, eventType, { summary: input.summary, verificationClaim: input.verificationClaim, filesChanged: input.filesChanged, ...verification })
       return { ok: true, content: `${verification.status === "verified" ? "Verification passed." : "Verification result: " + verification.status}\n${verification.evidence.join("\n")}`, metadata: { verificationStatus: verification.status, checks: verification.checks, evidence: verification.evidence } }
     },
   }

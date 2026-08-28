@@ -19,7 +19,8 @@ export function buildContextObjects(events: EventRecord[]): ContextObject[] {
     }
     if (event.type === "verification.completed" && typeof data.name === "string") {
       const output = typeof data.output === "string" ? data.output : ""
-      objects.push({ id: `verification-${event.seq}`, kind: "test", content: `${data.name}\n${output}`, state: "active", importance: data.passed === true ? 0.8 : 1, relevance: 1, freshness: 1, sourceKey: `test:${data.name}` })
+      const filesChanged = Array.isArray(data.filesChanged) ? data.filesChanged.filter((path): path is string => typeof path === "string") : []
+      objects.push({ id: `verification-${event.seq}`, kind: "test", content: `${data.name}\n${output}`, state: "active", importance: data.passed === true ? 0.8 : 1, relevance: 1, freshness: 1, sourceKey: `test:${data.name}`, relatedTo: filesChanged.map((path) => `file:${path}`) })
     }
   }
   return objects
