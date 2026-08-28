@@ -1,5 +1,6 @@
 // ContextCompiler 是模型调用前的“上下文装配器”接口。
 import type { ModelMessage } from "../model/types.js"
+import type { EventRecord } from "../events/types.js"
 
 /**
  * 决定本轮模型看到哪些消息。
@@ -7,6 +8,7 @@ import type { ModelMessage } from "../model/types.js"
  */
 export interface ContextCompiler {
   compile(input: { goal: string; messages: ModelMessage[] }): ModelMessage[]
+  compileWithEvents?(input: { goal: string; messages: ModelMessage[]; events: EventRecord[] }): ModelMessage[]
 }
 
 /**

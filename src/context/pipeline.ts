@@ -25,7 +25,9 @@ export class ContextPipeline {
   }
 
   compileCombined(events: EventRecord[], messages: ModelMessage[]): ModelMessage[] {
-    const objects = [...buildContextObjects(events), ...buildMessageContextObjects(messages)]
+    const messageContents = messages.map((message) => message.content ?? "")
+    const eventObjects = buildContextObjects(events).filter((object) => !messageContents.some((content) => content && object.content.includes(content)))
+    const objects = [...eventObjects, ...buildMessageContextObjects(messages)]
     return contextObjectsToMessages(this.compiler.compile(objects))
   }
 }
@@ -40,5 +42,9 @@ export class PipelineContextCompiler implements ContextCompiler {
 
   compile(input: { goal: string; messages: ModelMessage[] }): ModelMessage[] {
     return this.pipeline.compileMessages(input.messages)
+  }
+
+  compileWithEvents(input: { goal: string; messages: ModelMessage[]; events: EventRecord[] }): ModelMessage[] {
+    return this.pipeline.compileCombined(input.events, input.messages)
   }
 }

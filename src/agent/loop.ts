@@ -88,7 +88,11 @@ export class AgentLoop {
       await this.events.append(request.taskId, "model.requested", { call: state.modelCalls, messageCount: messages.length })
       let response
       try {
-        const modelRequest = { model: "deepseek-chat", messages: this.compiler.compile({ goal: request.goal, messages }), tools: this.tools.schemas(), ...(request.signal ? { signal: request.signal } : {}) }
+        const events = await this.events.readAll(request.taskId)
+        const compiledMessages = this.compiler.compileWithEvents
+          ? this.compiler.compileWithEvents({ goal: request.goal, messages, events })
+          : this.compiler.compile({ goal: request.goal, messages })
+        const modelRequest = { model: "deepseek-chat", messages: compiledMessages, tools: this.tools.schemas(), ...(request.signal ? { signal: request.signal } : {}) }
         response = await this.provider.complete(modelRequest)
       } catch (error: unknown) {
         await this.events.append(request.taskId, "task.failed", { phase: "model", error: errorMessage(error) })
