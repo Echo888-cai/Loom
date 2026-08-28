@@ -23,6 +23,11 @@ export class ContextPipeline {
     const workingSet = this.compiler.compile(buildMessageContextObjects(messages))
     return contextObjectsToMessages(workingSet)
   }
+
+  compileCombined(events: EventRecord[], messages: ModelMessage[]): ModelMessage[] {
+    const objects = [...buildContextObjects(events), ...buildMessageContextObjects(messages)]
+    return contextObjectsToMessages(this.compiler.compile(objects))
+  }
 }
 
 /** 适配 AgentLoop 现有接口，让每次模型请求自动经过完整 Pipeline。 */

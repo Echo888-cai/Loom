@@ -27,4 +27,18 @@ describe("Context pipeline", () => {
     expect(result[2]).toEqual(messages[2])
     expect(result[3]).toEqual(messages[3])
   })
+
+  it("combines conversation messages with execution facts", () => {
+    const events: EventRecord[] = [
+      { seq: 1, timestamp: "1", taskId: "t", type: "tool.completed", data: { name: "read_file", path: "src/auth.ts", content: "current auth code" } },
+    ]
+    const messages: ModelMessage[] = [{ role: "user", content: "修复登录问题" }]
+
+    const result = new ContextPipeline({ maxTokens: 100 }).compileCombined(events, messages)
+
+    expect(result).toEqual([
+      { role: "user", content: "修复登录问题" },
+      { role: "user", content: "[code]\nsrc/auth.ts\ncurrent auth code" },
+    ])
+  })
 })
