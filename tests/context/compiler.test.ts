@@ -55,9 +55,23 @@ describe("BudgetedContextCompiler", () => {
       { role: "assistant", content: "old conclusion that is no longer useful" },
     ]
 
-    const result = new BudgetedContextCompiler({ maxTokens: 7 }).compile({ goal: "goal", messages })
+    const result = new BudgetedContextCompiler({ maxTokens: 9 }).compile({ goal: "goal", messages })
 
     expect(result).toContainEqual(messages[2])
+    expect(result).toContainEqual(messages[3])
+  })
+
+  it("counts reasoning and tool arguments as context cost", () => {
+    const messages: ModelMessage[] = [
+      { role: "system", content: "system" },
+      { role: "user", content: "goal" },
+      { role: "assistant", content: "short", reasoningContent: "a long internal explanation that uses budget" },
+      { role: "assistant", content: "new" },
+    ]
+
+    const result = new BudgetedContextCompiler({ maxTokens: 8 }).compile({ goal: "goal", messages })
+
+    expect(result).not.toContainEqual(messages[2])
     expect(result).toContainEqual(messages[3])
   })
 })
