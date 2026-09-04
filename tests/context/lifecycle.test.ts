@@ -26,4 +26,15 @@ describe("Context lifecycle", () => {
 
     expect(result.map((object) => object.id)).toEqual(["active"])
   })
+
+  it("prioritizes failed verification evidence over ordinary code context", () => {
+    const objects: ContextObject[] = [
+      { id: "code", kind: "code", content: "code", state: "active", importance: 1, relevance: 1, freshness: 1 },
+      { id: "failure", kind: "test", content: "401", state: "active", importance: 1, relevance: 1, freshness: 1 },
+    ]
+
+    const result = new ContextObjectCompiler({ maxTokens: 1 }).compile(objects)
+
+    expect(result.map((object) => object.id)).toEqual(["failure"])
+  })
 })

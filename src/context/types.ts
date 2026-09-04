@@ -37,7 +37,8 @@ export class ContextObjectCompiler {
 }
 
 function score(object: ContextObject): number {
-  return object.importance * 0.4 + object.relevance * 0.4 + object.freshness * 0.2
+  const evidenceBoost = object.kind === "test" && object.state === "active" ? 0.25 : 0
+  return object.importance * 0.4 + object.relevance * 0.4 + object.freshness * 0.2 + evidenceBoost
 }
 
 function estimateTokens(content: string): number {
